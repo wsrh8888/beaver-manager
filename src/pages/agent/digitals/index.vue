@@ -23,7 +23,7 @@
   <div class="agent-digitals">
     <div class="agent-digitals-header">
       <h2 class="agent-digitals-title">官方数字伙伴</h2>
-      <p class="agent-digitals-hint">数字伙伴是一个用户，别人搜索或添加后才能聊天。内置模式直接绑定提示词、官方工具和 MCP</p>
+      <p class="agent-digitals-hint">数字伙伴是一个用户，别人搜索或添加后才能聊天。内置模式绑定提示词、官方工具和 MCP。模型不在这里配，agent 按 auto 自己取：有个人模型用个人的，没有就用官方的，都没有就提示没有</p>
     </div>
 
     <el-form :inline="true" class="agent-digitals-form">
@@ -90,9 +90,6 @@
             <el-option label="外接" value="external" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="form.runtime === 'builtin'" label="模型 ID">
-          <el-input v-model="form.llmModelId" placeholder="官方模型目录中的 modelId" />
-        </el-form-item>
         <el-form-item v-if="form.runtime === 'builtin'" label="系统提示词">
           <el-input v-model="form.systemPrompt" type="textarea" :rows="4" />
         </el-form-item>
@@ -155,7 +152,6 @@ function emptyForm() {
     description: "",
     runtime: "builtin",
     visibility: "private",
-    llmModelId: "",
     systemPrompt: "",
     toolIds: [] as string[],
     mcpServerIds: [] as string[],
@@ -232,7 +228,6 @@ export default defineComponent({
       form.description = row.description
       form.runtime = row.runtime
       form.visibility = row.visibility || "private"
-      form.llmModelId = row.llmModelId
       form.systemPrompt = row.systemPrompt
       form.toolIds = parseIdList(row.tools)
       form.mcpServerIds = parseIdList(row.mcpServerIds)
@@ -243,11 +238,10 @@ export default defineComponent({
 
     const builtinPayload = () => {
       if (form.runtime !== "builtin") {
-        return { systemPrompt: "", llmModelId: "", tools: "", mcpServerIds: "" }
+        return { systemPrompt: "", tools: "", mcpServerIds: "" }
       }
       return {
         systemPrompt: form.systemPrompt,
-        llmModelId: form.llmModelId,
         tools: JSON.stringify(form.toolIds),
         mcpServerIds: JSON.stringify(form.mcpServerIds)
       }

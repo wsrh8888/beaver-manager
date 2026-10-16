@@ -27,7 +27,7 @@ import { ajax } from "@/utils/request"
 export const loginApi = (data: ILoginReq) =>{
   return ajax<ILoginRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/auth_public/v1/login`,
+    url: `${config.baseAPI}/admin/backend/auth_public/v1/login`,
     data
   })
 }
@@ -36,6 +36,6 @@ export const loginApi = (data: ILoginReq) =>{
 export function getUserInfoApi() {
   return ajax<IGetUserInfoRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/auth_public/v1/authentication`
+    url: `${config.baseAPI}/admin/backend/auth_public/v1/authentication`
   })
 }

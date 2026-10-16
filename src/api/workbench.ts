@@ -34,7 +34,7 @@ import { ajax } from "@/utils/request"
 export function getWorkbenchAppListApi(params: IGetWorkbenchAppListReq) {
   return ajax<IGetWorkbenchAppListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/workbench/v1/list`,
+    url: `${config.baseAPI}/admin/backend/workbench/v1/list`,
     params
   })
 }
@@ -42,7 +42,7 @@ export function getWorkbenchAppListApi(params: IGetWorkbenchAppListReq) {
 export function getWorkbenchAppApi(workbenchAppId: string) {
   return ajax<IWorkbenchAppItem>({
     method: "GET",
-    url: `${config.baseAPI}/admin/workbench/v1/detail`,
+    url: `${config.baseAPI}/admin/backend/workbench/v1/detail`,
     params: { workbenchAppId }
   })
 }
@@ -50,7 +50,7 @@ export function getWorkbenchAppApi(workbenchAppId: string) {
 export function createWorkbenchAppApi(data: ICreateWorkbenchAppReq) {
   return ajax<ICreateWorkbenchAppRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/workbench/v1/create`,
+    url: `${config.baseAPI}/admin/backend/workbench/v1/create`,
     data
   })
 }
@@ -58,7 +58,7 @@ export function createWorkbenchAppApi(data: ICreateWorkbenchAppReq) {
 export function updateWorkbenchAppApi(data: IUpdateWorkbenchAppReq) {
   return ajax<void>({
     method: "POST",
-    url: `${config.baseAPI}/admin/workbench/v1/update`,
+    url: `${config.baseAPI}/admin/backend/workbench/v1/update`,
     data
   })
 }
@@ -66,7 +66,7 @@ export function updateWorkbenchAppApi(data: IUpdateWorkbenchAppReq) {
 export function deleteWorkbenchAppApi(data: IDeleteWorkbenchAppReq) {
   return ajax<void>({
     method: "POST",
-    url: `${config.baseAPI}/admin/workbench/v1/delete`,
+    url: `${config.baseAPI}/admin/backend/workbench/v1/delete`,
     data
   })
 }

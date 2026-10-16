@@ -29,7 +29,7 @@ import { ajax } from "@/utils/request"
 export function queryLogsApi(params: IQueryLogsReq) {
   return ajax<IQueryLogsRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/track/v1/query_logs`,
+    url: `${config.baseAPI}/admin/backend/track/v1/query_logs`,
     params
   })
 }

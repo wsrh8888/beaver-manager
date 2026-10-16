@@ -43,7 +43,7 @@ import { ajax } from "@/utils/request"
 export function getChatSessionListApi(params: IGetChatSessionListReq) {
   return ajax<IGetChatSessionListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/chat/v1/sessions`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/sessions`,
     params
   })
 }
@@ -51,7 +51,7 @@ export function getChatSessionListApi(params: IGetChatSessionListReq) {
 export function getChatMessageListApi(params: IGetChatMessageListReq) {
   return ajax<IGetChatMessageListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/chat/v1/list`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/list`,
     params
   })
 }
@@ -59,7 +59,7 @@ export function getChatMessageListApi(params: IGetChatMessageListReq) {
 export function getChatMessageDetailApi(messageId: string) {
   return ajax<IGetChatMessageDetailRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/chat/v1/detail`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/detail`,
     params: { id: messageId }
   })
 }
@@ -67,7 +67,7 @@ export function getChatMessageDetailApi(messageId: string) {
 export function deleteChatMessageApi(messageId: string) {
   return ajax<IDeleteChatMessageRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/delete`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/delete`,
     data: { id: messageId }
   })
 }
@@ -75,7 +75,7 @@ export function deleteChatMessageApi(messageId: string) {
 export function batchDeleteChatMessagesApi(data: IBatchDeleteChatMessagesReq) {
   return ajax<IBatchDeleteChatMessagesRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/batch_delete`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/batch_delete`,
     data
   })
 }
@@ -83,7 +83,7 @@ export function batchDeleteChatMessagesApi(data: IBatchDeleteChatMessagesReq) {
 export function restoreChatMessageApi(data: IRestoreChatMessageReq) {
   return ajax<IRestoreChatMessageRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/restore`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/restore`,
     data
   })
 }
@@ -91,7 +91,7 @@ export function restoreChatMessageApi(data: IRestoreChatMessageReq) {
 export function batchRestoreChatMessagesApi(data: IBatchRestoreChatMessagesReq) {
   return ajax<IBatchRestoreChatMessagesRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/batch_restore`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/batch_restore`,
     data
   })
 }
@@ -99,7 +99,7 @@ export function batchRestoreChatMessagesApi(data: IBatchRestoreChatMessagesReq) 
 export function clearConversationApi(data: IClearConversationReq) {
   return ajax<IClearConversationRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/clear_conversation`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/clear_conversation`,
     data
   })
 }
@@ -107,7 +107,7 @@ export function clearConversationApi(data: IClearConversationReq) {
 export function deleteMessagesByTypeApi(data: IDeleteMessagesByTypeReq) {
   return ajax<IDeleteMessagesByTypeRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/chat/v1/delete_by_type`,
+    url: `${config.baseAPI}/admin/backend/chat/v1/delete_by_type`,
     data
   })
 }

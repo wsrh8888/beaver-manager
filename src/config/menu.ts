@@ -21,8 +21,10 @@
 
 import type { Component } from "vue"
 import {
+  Avatar,
   ChatLineRound,
   Connection,
+  Cpu,
   Document,
   FolderOpened,
   Grid,
@@ -31,7 +33,9 @@ import {
   Message,
   Platform,
   Service,
+  SetUp,
   Share,
+  Coin,
   TrendCharts,
   Upload,
   User,
@@ -81,7 +85,20 @@ export const menuConfig: MenuItem[] = [
       { path: "/open/developers", title: "开发者", icon: UserFilled },
       { path: "/open/apps", title: "开放应用", icon: Platform },
       { path: "/open/workbench", title: "工作台应用", icon: Grid },
-      { path: "/open/integrations", title: "机器人集成", icon: Connection }
+      { path: "/open/integrations", title: "机器人集成", icon: Connection },
+      { path: "/open/digitals", title: "用户数字伙伴", icon: Avatar }
+    ]
+  },
+  {
+    path: "/agent",
+    title: "智能体",
+    icon: Cpu,
+    children: [
+      { path: "/agent/apps", title: "场景智能体", icon: Cpu },
+      { path: "/agent/models", title: "模型", icon: Coin },
+      { path: "/agent/tools", title: "工具", icon: SetUp },
+      { path: "/agent/mcp", title: "MCP", icon: Connection },
+      { path: "/agent/digitals", title: "官方数字伙伴", icon: Avatar }
     ]
   },
   {

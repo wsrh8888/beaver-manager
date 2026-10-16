@@ -41,7 +41,7 @@ import { ajax } from "@/utils/request"
 export function getDeveloperListApi(params: IGetDeveloperListReq) {
   return ajax<IGetDeveloperListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/open/v1/developer/list`,
+    url: `${config.baseAPI}/admin/backend/open/v1/developer_list`,
     params
   })
 }
@@ -49,7 +49,7 @@ export function getDeveloperListApi(params: IGetDeveloperListReq) {
 export function auditDeveloperApi(data: IAuditDeveloperReq) {
   return ajax<IAuditDeveloperRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/open/v1/developer/audit`,
+    url: `${config.baseAPI}/admin/backend/open/v1/developer_audit`,
     data
   })
 }
@@ -57,7 +57,7 @@ export function auditDeveloperApi(data: IAuditDeveloperReq) {
 export function applyDeveloperApi(data: IApplyDeveloperReq) {
   return ajax<IApplyDeveloperRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/open/v1/developer/apply`,
+    url: `${config.baseAPI}/admin/backend/open/v1/developer_apply`,
     data
   })
 }
@@ -65,7 +65,7 @@ export function applyDeveloperApi(data: IApplyDeveloperReq) {
 export function getOpenAppListApi(params: IGetOpenAppListReq) {
   return ajax<IGetOpenAppListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/open/v1/app/list`,
+    url: `${config.baseAPI}/admin/backend/open/v1/app_list`,
     params
   })
 }
@@ -73,7 +73,7 @@ export function getOpenAppListApi(params: IGetOpenAppListReq) {
 export function auditOpenAppApi(data: IAuditOpenAppReq) {
   return ajax<IAuditOpenAppRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/open/v1/app/audit`,
+    url: `${config.baseAPI}/admin/backend/open/v1/app_audit`,
     data
   })
 }
@@ -81,7 +81,7 @@ export function auditOpenAppApi(data: IAuditOpenAppReq) {
 export function updateOpenAppStatusApi(data: IUpdateOpenAppStatusReq) {
   return ajax<IUpdateOpenAppStatusRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/open/v1/app/update_status`,
+    url: `${config.baseAPI}/admin/backend/open/v1/app_update_status`,
     data
   })
 }
@@ -89,7 +89,7 @@ export function updateOpenAppStatusApi(data: IUpdateOpenAppStatusReq) {
 export function getOpenWebhookLogListApi(params: IGetOpenWebhookLogListReq) {
   return ajax<IGetOpenWebhookLogListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/open/v1/webhook/list_logs`,
+    url: `${config.baseAPI}/admin/backend/open/v1/webhook_list_logs`,
     params
   })
 }

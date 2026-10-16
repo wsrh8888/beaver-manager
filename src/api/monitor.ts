@@ -31,14 +31,14 @@ import { ajax } from "@/utils/request"
 export function getOnlineStatsApi() {
   return ajax<IOnlineStats>({
     method: "GET",
-    url: `${config.baseAPI}/admin/monitor/v1/stats`
+    url: `${config.baseAPI}/admin/backend/monitor/v1/stats`
   })
 }
 
 export function getOnlineUserListApi(params: IGetOnlineUserListReq) {
   return ajax<IGetOnlineUserListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/monitor/v1/list`,
+    url: `${config.baseAPI}/admin/backend/monitor/v1/list`,
     params
   })
 }
@@ -46,7 +46,7 @@ export function getOnlineUserListApi(params: IGetOnlineUserListReq) {
 export function getUserOnlineDevicesApi(userId: string) {
   return ajax<IGetUserOnlineDevicesRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/monitor/v1/devices`,
+    url: `${config.baseAPI}/admin/backend/monitor/v1/devices`,
     params: { userId }
   })
 }

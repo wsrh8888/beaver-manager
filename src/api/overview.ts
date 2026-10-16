@@ -30,14 +30,14 @@ import { ajax } from "@/utils/request"
 export function getDashboardOverviewApi() {
   return ajax<IDashboardOverview>({
     method: "GET",
-    url: `${config.baseAPI}/admin/overview/v1/dashboard`
+    url: `${config.baseAPI}/admin/backend/overview/v1/dashboard`
   })
 }
 
 export function getDashboardInboxApi(limit?: number) {
   return ajax<IGetDashboardInboxRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/overview/v1/inbox`,
+    url: `${config.baseAPI}/admin/backend/overview/v1/inbox`,
     params: { limit }
   })
 }
@@ -45,7 +45,7 @@ export function getDashboardInboxApi(limit?: number) {
 export function getDashboardTrendsApi(days?: number) {
   return ajax<IDashboardTrends>({
     method: "GET",
-    url: `${config.baseAPI}/admin/overview/v1/trends`,
+    url: `${config.baseAPI}/admin/backend/overview/v1/trends`,
     params: { days }
   })
 }

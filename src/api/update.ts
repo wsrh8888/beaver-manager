@@ -36,7 +36,7 @@ import type {
 export function addAppApi(data: IAddAppReq) {
   return ajax<IAddAppRes>({
     method: 'POST',
-    url: `${config.baseAPI}/admin/update/v1/add_app`,
+    url: `${config.baseAPI}/admin/backend/update/v1/add_app`,
     data
   })
 }
@@ -44,7 +44,7 @@ export function addAppApi(data: IAddAppReq) {
 export function getAppsApi(params: IGetAppsReq) {
   return ajax<IGetAppsRes>({
     method: 'GET',
-    url: `${config.baseAPI}/admin/update/v1/list_apps`,
+    url: `${config.baseAPI}/admin/backend/update/v1/list_apps`,
     params
   })
 }
@@ -52,7 +52,7 @@ export function getAppsApi(params: IGetAppsReq) {
 export function addArchitectureApi(data: IAddArchitectureReq) {
   return ajax<IAddArchitectureRes>({
     method: 'POST',
-    url: `${config.baseAPI}/admin/update/v1/add_architecture`,
+    url: `${config.baseAPI}/admin/backend/update/v1/add_architecture`,
     data
   })
 }
@@ -60,7 +60,7 @@ export function addArchitectureApi(data: IAddArchitectureReq) {
 export function updateArchitectureApi(data: IUpdateArchitectureReq) {
   return ajax<void>({
     method: 'POST',
-    url: `${config.baseAPI}/admin/update/v1/update_architecture`,
+    url: `${config.baseAPI}/admin/backend/update/v1/update_architecture`,
     data
   })
 }
@@ -68,14 +68,14 @@ export function updateArchitectureApi(data: IUpdateArchitectureReq) {
 export function getArchitecturesApi(params: IGetArchitecturesReq) {
   return ajax<IGetArchitecturesRes>({
     method: 'GET',
-    url: `${config.baseAPI}/admin/update/v1/list_architectures`,
+    url: `${config.baseAPI}/admin/backend/update/v1/list_architectures`,
     params
   })
 }
 
 export const addVersionApi = (data: IAddVersionReq) => {
   return ajax<IAddVersionRes>({
-    url: `${config.baseAPI}/admin/update/v1/add_version`,
+    url: `${config.baseAPI}/admin/backend/update/v1/add_version`,
     method: 'post',
     data
   })
@@ -83,7 +83,7 @@ export const addVersionApi = (data: IAddVersionReq) => {
 
 export const getVersionListApi = (params: IGetVersionListReq) => {
   return ajax<IGetVersionListRes>({
-    url: `${config.baseAPI}/admin/update/v1/list_versions`,
+    url: `${config.baseAPI}/admin/backend/update/v1/list_versions`,
     method: 'get',
     params
   })
@@ -92,7 +92,7 @@ export const getVersionListApi = (params: IGetVersionListReq) => {
 export function deleteVersionApi(id: number) {
   return ajax<void>({
     method: 'POST',
-    url: `${config.baseAPI}/admin/update/v1/delete_version`,
+    url: `${config.baseAPI}/admin/backend/update/v1/delete_version`,
     data: { id }
   })
 }
@@ -100,7 +100,7 @@ export function deleteVersionApi(id: number) {
 export function upsertReleasePolicyApi(data: IUpsertReleasePolicyReq) {
   return ajax<IUpsertReleasePolicyRes>({
     method: 'POST',
-    url: `${config.baseAPI}/admin/update/v1/upsert_release_policy`,
+    url: `${config.baseAPI}/admin/backend/update/v1/upsert_release_policy`,
     data
   })
 }
@@ -108,7 +108,7 @@ export function upsertReleasePolicyApi(data: IUpsertReleasePolicyReq) {
 export function getReleasePoliciesApi(params: IGetReleasePoliciesReq) {
   return ajax<IGetReleasePoliciesRes>({
     method: 'GET',
-    url: `${config.baseAPI}/admin/update/v1/list_release_policies`,
+    url: `${config.baseAPI}/admin/backend/update/v1/list_release_policies`,
     params
   })
 }

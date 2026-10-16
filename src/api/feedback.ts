@@ -33,7 +33,7 @@ import { ajax } from "@/utils/request"
 export function getFeedbackListApi(params: IGetFeedbackListReq) {
   return ajax<IGetFeedbackListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/feedback/v1/list`,
+    url: `${config.baseAPI}/admin/backend/feedback/v1/list`,
     params
   })
 }
@@ -41,7 +41,7 @@ export function getFeedbackListApi(params: IGetFeedbackListReq) {
 export function getFeedbackDetailApi(id: number) {
   return ajax<IGetFeedbackDetailRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/feedback/v1/detail`,
+    url: `${config.baseAPI}/admin/backend/feedback/v1/detail`,
     params: { id }
   })
 }
@@ -49,7 +49,7 @@ export function getFeedbackDetailApi(id: number) {
 export function handleFeedbackApi(id: number, data: Omit<IHandleFeedbackReq, "id">) {
   return ajax<IHandleFeedbackRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/feedback/v1/handle`,
+    url: `${config.baseAPI}/admin/backend/feedback/v1/handle`,
     data: { id, ...data }
   })
 }
@@ -57,7 +57,7 @@ export function handleFeedbackApi(id: number, data: Omit<IHandleFeedbackReq, "id
 export function deleteFeedbackApi(id: number) {
   return ajax<IDeleteFeedbackRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/feedback/v1/delete`,
+    url: `${config.baseAPI}/admin/backend/feedback/v1/delete`,
     data: { id }
   })
 }

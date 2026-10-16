@@ -51,7 +51,7 @@ import { ajax } from "@/utils/request"
 export function getMenuListApi(params: IGetMenuListReq) {
   return ajax<IGetMenuListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/system/v1/list_menus`,
+    url: `${config.baseAPI}/admin/backend/system/v1/list_menus`,
     params
   })
 }
@@ -59,7 +59,7 @@ export function getMenuListApi(params: IGetMenuListReq) {
 export function createMenuApi(data: ICreateMenuReq) {
   return ajax<ICreateMenuRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/create_menu`,
+    url: `${config.baseAPI}/admin/backend/system/v1/create_menu`,
     data
   })
 }
@@ -67,7 +67,7 @@ export function createMenuApi(data: ICreateMenuReq) {
 export function updateMenuApi(data: IUpdateMenuReq) {
   return ajax<IUpdateMenuRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/update_menu`,
+    url: `${config.baseAPI}/admin/backend/system/v1/update_menu`,
     data
   })
 }
@@ -75,7 +75,7 @@ export function updateMenuApi(data: IUpdateMenuReq) {
 export function deleteMenuApi(data: IDeleteMenuReq) {
   return ajax<IDeleteMenuRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/delete_menu`,
+    url: `${config.baseAPI}/admin/backend/system/v1/delete_menu`,
     data
   })
 }
@@ -83,7 +83,7 @@ export function deleteMenuApi(data: IDeleteMenuReq) {
 export function createAuthorityApi(data: ICreateAuthorityReq) {
   return ajax<ICreateAuthorityRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/create_authority`,
+    url: `${config.baseAPI}/admin/backend/system/v1/create_authority`,
     data
   })
 }
@@ -91,7 +91,7 @@ export function createAuthorityApi(data: ICreateAuthorityReq) {
 export function updateAuthorityMenuApi(data: IUpdateAuthorityMenuReq) {
   return ajax<IUpdateAuthorityMenuRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/update_authority_menu`,
+    url: `${config.baseAPI}/admin/backend/system/v1/update_authority_menu`,
     data
   })
 }
@@ -99,14 +99,14 @@ export function updateAuthorityMenuApi(data: IUpdateAuthorityMenuReq) {
 export function getAuthorityListApi() {
   return ajax<IGetAuthorityListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/system/v1/list_authorities`
+    url: `${config.baseAPI}/admin/backend/system/v1/list_authorities`
   })
 }
 
 export function updateAuthorityApi(data: IUpdateAuthorityReq) {
   return ajax<IUpdateAuthorityRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/update_authority`,
+    url: `${config.baseAPI}/admin/backend/system/v1/update_authority`,
     data
   })
 }
@@ -114,7 +114,7 @@ export function updateAuthorityApi(data: IUpdateAuthorityReq) {
 export function deleteAuthorityApi(data: IDeleteAuthorityReq) {
   return ajax<IDeleteAuthorityRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/delete_authority`,
+    url: `${config.baseAPI}/admin/backend/system/v1/delete_authority`,
     data
   })
 }
@@ -122,7 +122,7 @@ export function deleteAuthorityApi(data: IDeleteAuthorityReq) {
 export function getAuthorityMenusApi(authorityId: number) {
   return ajax<IGetAuthorityMenusRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/system/v1/authority_menus`,
+    url: `${config.baseAPI}/admin/backend/system/v1/authority_menus`,
     params: { id: authorityId }
   })
 }
@@ -130,7 +130,7 @@ export function getAuthorityMenusApi(authorityId: number) {
 export function getAdminUserListApi(params: IGetAdminUserListReq) {
   return ajax<IGetAdminUserListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/system/v1/list_admins`,
+    url: `${config.baseAPI}/admin/backend/system/v1/list_admins`,
     params
   })
 }
@@ -138,7 +138,7 @@ export function getAdminUserListApi(params: IGetAdminUserListReq) {
 export function createAdminUserApi(data: ICreateAdminUserReq) {
   return ajax<ICreateAdminUserRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/create_admin`,
+    url: `${config.baseAPI}/admin/backend/system/v1/create_admin`,
     data
   })
 }
@@ -146,7 +146,7 @@ export function createAdminUserApi(data: ICreateAdminUserReq) {
 export function updateAdminUserApi(userId: string, data: IUpdateAdminUserReq) {
   return ajax<IUpdateAdminUserRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/system/v1/update_admin`,
+    url: `${config.baseAPI}/admin/backend/system/v1/update_admin`,
     data: { ...data, userId }
   })
 }

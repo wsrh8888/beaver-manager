@@ -41,7 +41,7 @@ import { ajax } from "@/utils/request"
 export function getCircleListApi(params: GetCircleListReq) {
   return ajax<GetCircleListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/circle/v1/list`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/list`,
     params
   })
 }
@@ -49,7 +49,7 @@ export function getCircleListApi(params: GetCircleListReq) {
 export function getCircleDetailApi(circleId: string) {
   return ajax<GetCircleDetailRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/circle/v1/detail`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/detail`,
     params: { circleId }
   })
 }
@@ -57,7 +57,7 @@ export function getCircleDetailApi(circleId: string) {
 export function deleteCircleApi(circleId: string) {
   return ajax<DeleteCircleRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/circle/v1/delete`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/delete`,
     data: { circleId }
   })
 }
@@ -65,7 +65,7 @@ export function deleteCircleApi(circleId: string) {
 export function getCircleMemberListApi(params: GetCircleMemberListReq) {
   return ajax<GetCircleMemberListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/circle/v1/members`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/members`,
     params
   })
 }
@@ -73,7 +73,7 @@ export function getCircleMemberListApi(params: GetCircleMemberListReq) {
 export function removeCircleMemberApi(data: RemoveCircleMemberReq) {
   return ajax<RemoveCircleMemberRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/circle/v1/remove_member`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/remove_member`,
     data
   })
 }
@@ -81,7 +81,7 @@ export function removeCircleMemberApi(data: RemoveCircleMemberReq) {
 export function getCirclePostListApi(params: GetCirclePostListReq) {
   return ajax<GetCirclePostListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/circle/v1/posts`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/posts`,
     params
   })
 }
@@ -89,7 +89,7 @@ export function getCirclePostListApi(params: GetCirclePostListReq) {
 export function deleteCirclePostApi(postId: string) {
   return ajax<DeleteCirclePostRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/circle/v1/delete_post`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/delete_post`,
     data: { postId }
   })
 }
@@ -97,7 +97,7 @@ export function deleteCirclePostApi(postId: string) {
 export function getCircleCommentListApi(params: GetCircleCommentListReq) {
   return ajax<GetCircleCommentListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/circle/v1/comments`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/comments`,
     params
   })
 }
@@ -105,7 +105,7 @@ export function getCircleCommentListApi(params: GetCircleCommentListReq) {
 export function deleteCircleCommentApi(commentId: string) {
   return ajax<DeleteCircleCommentRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/circle/v1/delete_comment`,
+    url: `${config.baseAPI}/admin/backend/circle/v1/delete_comment`,
     data: { commentId }
   })
 }

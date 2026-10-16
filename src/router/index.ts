@@ -114,6 +114,42 @@ const router = createRouter({
               path: "integrations",
               name: "机器人集成",
               component: () => import("@/pages/open/integrations/index.vue")
+            },
+            {
+              path: "digitals",
+              name: "用户数字伙伴",
+              component: () => import("@/pages/open/digitals/index.vue")
+            }
+          ]
+        },
+        {
+          path: "agent",
+          redirect: "/agent/apps",
+          children: [
+            {
+              path: "apps",
+              name: "场景智能体",
+              component: () => import("@/pages/agent/apps/index.vue")
+            },
+            {
+              path: "models",
+              name: "模型",
+              component: () => import("@/pages/agent/models/index.vue")
+            },
+            {
+              path: "tools",
+              name: "智能体工具",
+              component: () => import("@/pages/agent/tools/index.vue")
+            },
+            {
+              path: "mcp",
+              name: "MCP 服务",
+              component: () => import("@/pages/agent/mcp/index.vue")
+            },
+            {
+              path: "digitals",
+              name: "官方数字伙伴",
+              component: () => import("@/pages/agent/digitals/index.vue")
             }
           ]
         },

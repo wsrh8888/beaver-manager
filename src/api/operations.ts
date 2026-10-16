@@ -29,7 +29,7 @@ import { ajax } from "@/utils/request"
 export function getUserOperationsProfileApi(userId: string) {
   return ajax<IGetUserOperationsProfileRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/operations/v1/user_profile`,
+    url: `${config.baseAPI}/admin/backend/operations/v1/user_profile`,
     params: { userId }
   })
 }
@@ -37,7 +37,7 @@ export function getUserOperationsProfileApi(userId: string) {
 export function getGroupOperationsProfileApi(groupId: string) {
   return ajax<IGetGroupOperationsProfileRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/operations/v1/group_profile`,
+    url: `${config.baseAPI}/admin/backend/operations/v1/group_profile`,
     params: { groupId }
   })
 }

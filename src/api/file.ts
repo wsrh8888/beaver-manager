@@ -37,7 +37,7 @@ import { ElMessage } from "element-plus"
 export function getFileListApi(params: IGetFileListReq) {
   return ajax<IGetFileListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/file/v1/list`,
+    url: `${config.baseAPI}/admin/backend/file/v1/list`,
     params
   })
 }
@@ -46,7 +46,7 @@ export function getFileListApi(params: IGetFileListReq) {
 export function getFileDetailApi(id: number) {
   return ajax<IGetFileDetailRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/file/v1/detail`,
+    url: `${config.baseAPI}/admin/backend/file/v1/detail`,
     params: { id }
   })
 }
@@ -55,7 +55,7 @@ export function getFileDetailApi(id: number) {
 export function deleteFileApi(id: number) {
   return ajax<IDeleteFileRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/file/v1/delete`,
+    url: `${config.baseAPI}/admin/backend/file/v1/delete`,
     data: { id }
   })
 }
@@ -64,7 +64,7 @@ export function deleteFileApi(id: number) {
 export function batchDeleteFileApi(data: IBatchDeleteFileReq) {
   return ajax<IBatchDeleteFileRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/file/v1/batch_delete`,
+    url: `${config.baseAPI}/admin/backend/file/v1/batch_delete`,
     data
   })
 }
@@ -90,7 +90,7 @@ export async function getQiniuUploadTokenApi() {
   try {
     const response = await ajax<{ uploadToken: string; expiresIn: number }>({
       method: "POST",
-      url: `${config.baseAPI}/admin/file/v1/qiniu_token`
+      url: `${config.baseAPI}/admin/backend/file/v1/qiniu_token`
     })
     
     tokenCache = {
@@ -115,7 +115,7 @@ export function saveFileApi(data: {
 }) {
   return ajax<{ fileId: string }>({
     method: "POST",
-    url: `${config.baseAPI}/admin/file/v1/save`,
+    url: `${config.baseAPI}/admin/backend/file/v1/save`,
     data
   })
 }
@@ -214,7 +214,7 @@ export const uploadFileApi = async (file: File): Promise<IFileUploadResult> => {
 export const uploadFileApiWithTarget = async (file: File, target: 'local' | 'qiniu' = 'local'): Promise<IFileUploadResult> => {
   // 根据目标选择URL
   const baseEndpoint = target === 'qiniu' ? 'upload_qiniu' : 'upload_local'
-  const uploadUrl = `${config.baseAPI}/admin/file/v1/${baseEndpoint}`
+  const uploadUrl = `${config.baseAPI}/admin/backend/file/v1/${baseEndpoint}`
 
   // 获取文件信息
   const fileInfo = await getFileInfo(file)

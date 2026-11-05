@@ -50,6 +50,11 @@
           <el-option v-for="item in mcpOptions" :key="item.mcpServerId" :label="item.name" :value="item.mcpServerId" />
         </el-select>
       </el-form-item>
+      <el-form-item label="知识库">
+        <el-select v-model="form.knowledgeIds" multiple filterable style="width: 480px" placeholder="选择知识库集合">
+          <el-option v-for="item in knowledgeOptions" :key="item.collectionId" :label="item.name" :value="item.collectionId" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="状态">
         <el-radio-group v-model="form.status">
           <el-radio :value="1">启用</el-radio>
@@ -64,9 +69,19 @@
 </template>
 
 <script lang="ts">
-import type { IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
+import type { IAgentAppInfo, IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
+import type { IKnowledgeCollectionInfo } from "@/types/api/knowledge"
 import { ElMessage } from "element-plus"
-import { getAgentMcpServerListApi, getAgentToolListApi, getAiAssistantApi, saveAiAssistantApi } from "@/api/agent"
+import {
+  createAgentAppApi,
+  getAgentAppListApi,
+  getAgentMcpServerListApi,
+  getAgentToolListApi,
+  getAiAssistantApi,
+  saveAiAssistantApi,
+  updateAgentAppApi
+} from "@/api/agent"
+import { getKnowledgeCollectionListApi } from "@/api/knowledge"
 
 function parseIdList(raw: string) {
   if (!raw || raw.trim().charAt(0) !== "[") {
@@ -86,6 +101,8 @@ export default defineComponent({
     const scene = ref("assistant")
     const toolOptions = ref<IAgentToolInfo[]>([])
     const mcpOptions = ref<IAgentMcpServerInfo[]>([])
+    const knowledgeOptions = ref<IKnowledgeCollectionInfo[]>([])
+    const currentApp = ref<IAgentAppInfo | null>(null)
     const sceneNames: Record<string, string> = {
       assistant: "AI 助手",
       chat: "聊天",
@@ -98,6 +115,7 @@ export default defineComponent({
       modelParams: "",
       toolIds: [] as string[],
       mcpServerIds: [] as string[],
+      knowledgeIds: [] as string[],
       status: 1
     })
 
@@ -110,6 +128,26 @@ export default defineComponent({
       if (mcpRes.code === 0) {
         mcpOptions.value = mcpRes.result.list || []
       }
+      const knowledgeRes = await getKnowledgeCollectionListApi({ status: 1, page: 1, pageSize: 200 })
+      if (knowledgeRes.code === 0) {
+        knowledgeOptions.value = knowledgeRes.result.list || []
+      }
+    }
+
+    // 知识库绑定落在 AgentApp（运行时 definition_loader 只读 AgentApp.knowledge_ids）。
+    const loadSceneAgentApp = async () => {
+      currentApp.value = null
+      form.knowledgeIds = []
+      const res = await getAgentAppListApi({ scene: scene.value, page: 1, pageSize: 20 })
+      if (res.code !== 0) {
+        return
+      }
+      const app = (res.result.list || []).find((item) => item.scene === scene.value)
+      if (!app) {
+        return
+      }
+      currentApp.value = app
+      form.knowledgeIds = parseIdList(app.knowledgeIds)
     }
 
     const loadAssistant = async () => {
@@ -127,6 +165,37 @@ export default defineComponent({
       form.toolIds = parseIdList(assistant.tools)
       form.mcpServerIds = parseIdList(assistant.mcpServerIds)
       form.status = assistant.status || 1
+      await loadSceneAgentApp()
+    }
+
+    // 仅同步 knowledgeIds，其余字段沿用已存在的 AgentApp（空 persona/tools 会回落到场景内置人设与全量内置工具）。
+    const syncAgentAppKnowledge = async () => {
+      const knowledgeIds = JSON.stringify(form.knowledgeIds)
+      const app = currentApp.value
+      if (app) {
+        return await updateAgentAppApi({
+          appId: app.appId,
+          name: app.name,
+          scene: app.scene,
+          systemPrompt: app.systemPrompt,
+          llmModelId: app.llmModelId,
+          modelParams: app.modelParams,
+          tools: app.tools,
+          mcpServerIds: app.mcpServerIds,
+          knowledgeIds,
+          openingMessage: app.openingMessage,
+          openingQuestions: app.openingQuestions,
+          variables: app.variables,
+          status: app.status,
+          sort: app.sort
+        })
+      }
+      return await createAgentAppApi({
+        name: sceneNames[scene.value] || scene.value,
+        scene: scene.value,
+        knowledgeIds,
+        status: 1
+      })
     }
 
     const submitForm = async () => {
@@ -142,10 +211,16 @@ export default defineComponent({
         status: form.status
       })
       saving.value = false
-      if (res.code === 0) {
-        ElMessage.success("已保存")
-      } else {
+      if (res.code !== 0) {
         ElMessage.error(res.msg || "保存失败")
+        return
+      }
+      const syncRes = await syncAgentAppKnowledge()
+      if (syncRes.code === 0) {
+        ElMessage.success("已保存")
+        await loadSceneAgentApp()
+      } else {
+        ElMessage.error(syncRes.msg || "知识库绑定保存失败")
       }
     }
 
@@ -154,7 +229,7 @@ export default defineComponent({
       loadAssistant()
     })
 
-    return { loading, saving, scene, toolOptions, mcpOptions, form, loadAssistant, submitForm }
+    return { loading, saving, scene, toolOptions, mcpOptions, knowledgeOptions, form, loadAssistant, submitForm }
   }
 })
 </script>

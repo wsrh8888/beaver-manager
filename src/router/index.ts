@@ -150,6 +150,11 @@ const router = createRouter({
               path: "digitals",
               name: "官方数字伙伴",
               component: () => import("@/pages/agent/digitals/index.vue")
+            },
+            {
+              path: "knowledge",
+              name: "知识库",
+              component: () => import("@/pages/agent/knowledge/index.vue")
             }
           ]
         },

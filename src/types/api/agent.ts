@@ -54,8 +54,8 @@ export interface IAgentModelInfo {
   name: string
   provider: string
   modelName: string
-  endpoint: string
-  apiKey: string
+  credentialId: string
+  channelName: string
   contextWindow: number
   maxOutputTokens: number
   supportsTools: boolean
@@ -81,10 +81,8 @@ export interface ICreateAgentModelReq {
   name: string
   source: string
   userId?: string
-  provider?: string
+  credentialId: string
   modelName?: string
-  endpoint?: string
-  apiKey?: string
   contextWindow?: number
   maxOutputTokens?: number
   supportsTools?: boolean
@@ -97,14 +95,65 @@ export interface ICreateAgentModelRes {
   modelId: string
 }
 
-export interface IUpdateAgentModelReq extends ICreateAgentModelReq {
+export interface IUpdateAgentModelReq extends Omit<ICreateAgentModelReq, "credentialId"> {
   modelId: string
+  credentialId?: string
 }
 
 export interface IDeleteAgentModelReq {
   modelId: string
   source?: string
   userId?: string
+}
+
+// —— 模型接入通道（两层货架上层，官方渠道，密钥只进不出）——
+export interface IAgentCredentialInfo {
+  credentialId: string
+  name: string
+  modelService: string
+  channelType: string
+  baseUrl: string
+  keyHint: string
+  keyConfigured: boolean
+  sort: number
+  status: number
+}
+
+export interface IGetAgentCredentialListReq {
+  status?: number
+}
+
+export interface IGetAgentCredentialListRes {
+  list: IAgentCredentialInfo[]
+}
+
+export interface ICreateAgentCredentialReq {
+  name: string
+  modelService: string
+  channelType?: string
+  baseUrl: string
+  apiKey?: string
+  sort?: number
+  status?: number
+}
+
+export interface ICreateAgentCredentialRes {
+  credentialId: string
+}
+
+export interface IUpdateAgentCredentialReq {
+  credentialId: string
+  name?: string
+  modelService?: string
+  channelType?: string
+  baseUrl?: string
+  apiKey?: string
+  sort?: number
+  status?: number
+}
+
+export interface IDeleteAgentCredentialReq {
+  credentialId: string
 }
 
 export interface IAgentAppInfo {

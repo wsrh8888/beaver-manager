@@ -4,257 +4,256 @@
   Project: beaver-manager
   https://github.com/wsrh8888/beaver-manager
 
-  中文：
-  本文件为海狸 IM（Beaver IM）开源项目源代码。
-  版权所有 © 2024-2026 Beaver IM Team，基于 MIT 协议授权。
-  禁止删除、篡改或替换本文件头部版权与许可声明。
-  使用与商业授权说明：https://wsrh8888.github.io/beaver-docs/community/license.html
-
-  English:
-  This file is part of the Beaver IM open-source project.
-  Copyright (c) 2024-2026 Beaver IM Team. Licensed under the MIT License.
-  Do not remove, alter, or replace this copyright and license header.
-  Usage & commercial licensing: https://wsrh8888.github.io/beaver-docs/community/license.html
-
-  beaver-manager-header-v1
+  场景智能体列表页：卡片网格，点击卡片进入详情二级页面
 -->
 
 <template>
-  <div class="agent-assistant">
-    <div class="agent-assistant-header">
-      <h2 class="agent-assistant-title">场景智能体</h2>
-      <p class="agent-assistant-hint">每个场景只能有一个智能体。名称就是场景名。模型不在这里配，agent 按 auto 自己取：有个人模型用个人的，没有就用官方的，都没有就提示没有</p>
+  <div class="agent-apps" v-loading="loading">
+    <div class="agent-apps__header">
+      <div class="agent-apps__header-left">
+        <h2 class="agent-apps__title">场景智能体</h2>
+        <p class="agent-apps__hint">每个场景对应一个智能体，点击卡片进入配置页面。</p>
+      </div>
+      <div class="agent-apps__header-actions">
+        <el-button @click="loadAll">刷新</el-button>
+      </div>
     </div>
 
-    <el-radio-group v-model="scene" class="agent-assistant-scenes" @change="loadAssistant">
-      <el-radio-button value="assistant">AI 助手</el-radio-button>
-      <el-radio-button value="chat">聊天</el-radio-button>
-      <el-radio-button value="moment">朋友圈</el-radio-button>
-      <el-radio-button value="workbench">工作台</el-radio-button>
-    </el-radio-group>
+    <div v-if="cards.length" class="agent-grid">
+      <div v-for="card in cards" :key="card.scene" class="agent-card" @click="openDetail(card)">
+        <div class="agent-card__top">
+          <div class="agent-card__title-row">
+            <span class="agent-card__name">{{ card.name }}</span>
+            <el-tag size="small" effect="light" :type="card.status === 1 ? 'success' : 'info'">
+              {{ card.status === 1 ? "启用" : "停用" }}
+            </el-tag>
+          </div>
+          <div class="agent-card__meta">
+            <span>{{ sceneLabel(card.scene) }}</span>
+            <span v-if="card.modelName">· {{ card.modelName }}</span>
+            <el-tag v-if="card.generationStyle" size="small" type="warning" effect="plain">
+              {{ card.generationStyle }}
+            </el-tag>
+          </div>
+        </div>
+        <p class="agent-card__desc">
+          {{ card.systemPrompt || "暂无系统提示词" }}
+        </p>
+        <div class="agent-card__stats">
+          <span>知识 {{ card.knowledgeCount }}</span>
+          <span>工具 {{ card.toolCount }}</span>
+          <span>MCP {{ card.mcpCount }}</span>
+          <span>变量 {{ card.varCount }}</span>
+        </div>
+        <div class="agent-card__foot">
+          <span class="agent-card__time">{{ card.openingMessage ? "已配开场白" : "未配开场白" }}</span>
+          <span class="agent-card__id">{{ card.scene }}</span>
+        </div>
+      </div>
+    </div>
 
-    <el-form v-loading="loading" label-width="100px" class="agent-assistant-form">
-      <el-form-item label="系统提示词">
-        <el-input v-model="form.systemPrompt" type="textarea" :rows="6" />
-      </el-form-item>
-      <el-form-item label="开场白">
-        <el-input v-model="form.openingMessage" type="textarea" :rows="2" />
-      </el-form-item>
-      <el-form-item label="工具">
-        <el-select v-model="form.toolIds" multiple filterable style="width: 480px" placeholder="选择官方工具">
-          <el-option v-for="item in toolOptions" :key="item.toolId" :label="item.name" :value="item.toolId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="MCP">
-        <el-select v-model="form.mcpServerIds" multiple filterable style="width: 480px" placeholder="选择官方 MCP">
-          <el-option v-for="item in mcpOptions" :key="item.mcpServerId" :label="item.name" :value="item.mcpServerId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="知识库">
-        <el-select v-model="form.knowledgeIds" multiple filterable style="width: 480px" placeholder="选择知识库集合">
-          <el-option v-for="item in knowledgeOptions" :key="item.collectionId" :label="item.name" :value="item.collectionId" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态">
-        <el-radio-group v-model="form.status">
-          <el-radio :value="1">启用</el-radio>
-          <el-radio :value="2">停用</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" :loading="saving" @click="submitForm">保存</el-button>
-      </el-form-item>
-    </el-form>
+    <el-empty v-else description="暂无场景智能体" :image-size="80" />
   </div>
 </template>
 
 <script lang="ts">
-import type { IAgentAppInfo, IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
-import type { IKnowledgeCollectionInfo } from "@/types/api/knowledge"
-import { ElMessage } from "element-plus"
-import {
-  createAgentAppApi,
-  getAgentAppListApi,
-  getAgentMcpServerListApi,
-  getAgentToolListApi,
-  getAiAssistantApi,
-  saveAiAssistantApi,
-  updateAgentAppApi
-} from "@/api/agent"
-import { getKnowledgeCollectionListApi } from "@/api/knowledge"
+import type { IAgentAppInfo, IAgentModelInfo } from "@/types/api/agent"
+import { useRouter } from "vue-router"
+import { getAgentAppListApi, getAgentModelListApi, getAiAssistantApi } from "@/api/agent"
+import { parseIdList, parseModelParams, parseVars, styleFromParams } from "./detail/tabs/shared"
 
-function parseIdList(raw: string) {
-  if (!raw || raw.trim().charAt(0) !== "[") {
-    return [] as string[]
-  }
-  const parsed = JSON.parse(raw) as unknown
-  if (!Array.isArray(parsed)) {
-    return []
-  }
-  return parsed.filter((item): item is string => typeof item === "string")
+interface ISceneCard {
+  scene: string
+  name: string
+  systemPrompt: string
+  openingMessage: string
+  status: number
+  modelName: string
+  generationStyle: string
+  knowledgeCount: number
+  toolCount: number
+  mcpCount: number
+  varCount: number
+}
+
+const SCENES = ["assistant", "chat", "moment", "workbench"]
+const SCENE_LABELS: Record<string, string> = {
+  assistant: "AI 助手",
+  chat: "聊天",
+  moment: "朋友圈",
+  workbench: "工作台"
+}
+const STYLE_LABELS: Record<string, string> = { stable: "更稳定", balanced: "默认", creative: "更发散" }
+
+function sceneLabel(scene: string) {
+  return SCENE_LABELS[scene] || scene
 }
 
 export default defineComponent({
   setup() {
+    const router = useRouter()
     const loading = ref(false)
-    const saving = ref(false)
-    const scene = ref("assistant")
-    const toolOptions = ref<IAgentToolInfo[]>([])
-    const mcpOptions = ref<IAgentMcpServerInfo[]>([])
-    const knowledgeOptions = ref<IKnowledgeCollectionInfo[]>([])
-    const currentApp = ref<IAgentAppInfo | null>(null)
-    const sceneNames: Record<string, string> = {
-      assistant: "AI 助手",
-      chat: "聊天",
-      moment: "朋友圈",
-      workbench: "工作台"
-    }
-    const form = reactive({
-      systemPrompt: "",
-      openingMessage: "",
-      modelParams: "",
-      toolIds: [] as string[],
-      mcpServerIds: [] as string[],
-      knowledgeIds: [] as string[],
-      status: 1
-    })
+    const modelOptions = ref<IAgentModelInfo[]>([])
+    const cards = ref<ISceneCard[]>([])
 
-    const loadOptions = async () => {
-      const toolRes = await getAgentToolListApi({ status: 0, source: "official" })
-      if (toolRes.code === 0) {
-        toolOptions.value = toolRes.result.list || []
-      }
-      const mcpRes = await getAgentMcpServerListApi({ status: 0, source: "official" })
-      if (mcpRes.code === 0) {
-        mcpOptions.value = mcpRes.result.list || []
-      }
-      const knowledgeRes = await getKnowledgeCollectionListApi({ status: 1, page: 1, pageSize: 200 })
-      if (knowledgeRes.code === 0) {
-        knowledgeOptions.value = knowledgeRes.result.list || []
-      }
+    const modelNameOf = (modelId: string) => {
+      if (!modelId) return ""
+      return modelOptions.value.find((m) => m.modelId === modelId)?.name || modelId
     }
 
-    // 知识库绑定落在 AgentApp（运行时 definition_loader 只读 AgentApp.knowledge_ids）。
-    const loadSceneAgentApp = async () => {
-      currentApp.value = null
-      form.knowledgeIds = []
-      const res = await getAgentAppListApi({ scene: scene.value, page: 1, pageSize: 20 })
-      if (res.code !== 0) {
-        return
-      }
-      const app = (res.result.list || []).find((item) => item.scene === scene.value)
-      if (!app) {
-        return
-      }
-      currentApp.value = app
-      form.knowledgeIds = parseIdList(app.knowledgeIds)
-    }
-
-    const loadAssistant = async () => {
+    const loadAll = async () => {
       loading.value = true
-      const res = await getAiAssistantApi({ scene: scene.value })
-      loading.value = false
-      if (res.code !== 0 || !res.result.assistant) {
-        ElMessage.error(res.msg || "加载失败")
-        return
-      }
-      const assistant = res.result.assistant
-      form.systemPrompt = assistant.systemPrompt
-      form.openingMessage = assistant.openingMessage
-      form.modelParams = assistant.modelParams
-      form.toolIds = parseIdList(assistant.tools)
-      form.mcpServerIds = parseIdList(assistant.mcpServerIds)
-      form.status = assistant.status || 1
-      await loadSceneAgentApp()
-    }
+      try {
+        const [modelRes, assistantRes, appRes] = await Promise.all([
+          getAgentModelListApi({ status: 1, page: 1, pageSize: 200 }),
+          Promise.all(SCENES.map((s) => getAiAssistantApi({ scene: s }))),
+          getAgentAppListApi({ page: 1, pageSize: 100 })
+        ])
+        if (modelRes.code === 0) modelOptions.value = modelRes.result.list || []
 
-    // 仅同步 knowledgeIds，其余字段沿用已存在的 AgentApp（空 persona/tools 会回落到场景内置人设与全量内置工具）。
-    const syncAgentAppKnowledge = async () => {
-      const knowledgeIds = JSON.stringify(form.knowledgeIds)
-      const app = currentApp.value
-      if (app) {
-        return await updateAgentAppApi({
-          appId: app.appId,
-          name: app.name,
-          scene: app.scene,
-          systemPrompt: app.systemPrompt,
-          llmModelId: app.llmModelId,
-          modelParams: app.modelParams,
-          tools: app.tools,
-          mcpServerIds: app.mcpServerIds,
-          knowledgeIds,
-          openingMessage: app.openingMessage,
-          openingQuestions: app.openingQuestions,
-          variables: app.variables,
-          status: app.status,
-          sort: app.sort
+        const appMap = new Map<string, IAgentAppInfo>()
+        if (appRes.code === 0) {
+          for (const app of appRes.result.list || []) appMap.set(app.scene, app)
+        }
+
+        cards.value = SCENES.map((scene) => {
+          const assistant = assistantRes.find((r) => r.code === 0 && r.result.assistant?.scene === scene)?.result.assistant
+          const app = appMap.get(scene)
+          const style = styleFromParams(parseModelParams(assistant?.modelParams || app?.modelParams || ""))
+          return {
+            scene,
+            name: assistant?.name || SCENE_LABELS[scene],
+            systemPrompt: assistant?.systemPrompt || app?.systemPrompt || "",
+            openingMessage: assistant?.openingMessage || app?.openingMessage || "",
+            status: assistant?.status || app?.status || 1,
+            modelName: modelNameOf(assistant?.llmModelId || app?.llmModelId || ""),
+            generationStyle: STYLE_LABELS[style] || "",
+            knowledgeCount: parseIdList(app?.knowledgeIds || "").length,
+            toolCount: parseIdList(assistant?.tools || app?.tools || "").length,
+            mcpCount: parseIdList(assistant?.mcpServerIds || app?.mcpServerIds || "").length,
+            varCount: parseVars(app?.variables || "").length
+          }
         })
-      }
-      return await createAgentAppApi({
-        name: sceneNames[scene.value] || scene.value,
-        scene: scene.value,
-        knowledgeIds,
-        status: 1
-      })
-    }
-
-    const submitForm = async () => {
-      saving.value = true
-      const res = await saveAiAssistantApi({
-        scene: scene.value,
-        name: sceneNames[scene.value] || scene.value,
-        systemPrompt: form.systemPrompt,
-        openingMessage: form.openingMessage,
-        modelParams: form.modelParams,
-        tools: JSON.stringify(form.toolIds),
-        mcpServerIds: JSON.stringify(form.mcpServerIds),
-        status: form.status
-      })
-      saving.value = false
-      if (res.code !== 0) {
-        ElMessage.error(res.msg || "保存失败")
-        return
-      }
-      const syncRes = await syncAgentAppKnowledge()
-      if (syncRes.code === 0) {
-        ElMessage.success("已保存")
-        await loadSceneAgentApp()
-      } else {
-        ElMessage.error(syncRes.msg || "知识库绑定保存失败")
+      } finally {
+        loading.value = false
       }
     }
 
-    onMounted(() => {
-      loadOptions()
-      loadAssistant()
-    })
+    const openDetail = (card: ISceneCard) => {
+      router.push({ path: "/agent/apps/detail", query: { scene: card.scene } })
+    }
 
-    return { loading, saving, scene, toolOptions, mcpOptions, knowledgeOptions, form, loadAssistant, submitForm }
+    onMounted(loadAll)
+
+    return { loading, cards, sceneLabel, loadAll, openDetail }
   }
 })
 </script>
 
-<style lang="less">
-.agent-assistant {
+<style lang="less" scoped>
+.agent-apps {
   padding: 20px;
 
-  .agent-assistant-title {
-    margin-top: 0;
-    margin-bottom: 4px;
-    margin-left: 0;
-    margin-right: 0;
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
   }
 
-  .agent-assistant-hint {
-    margin-top: 0;
-    margin-bottom: 16px;
-    margin-left: 0;
-    margin-right: 0;
+  &__title {
+    margin: 0 0 4px;
+  }
+
+  &__hint {
+    margin: 0;
     color: #909399;
   }
+}
 
-  .agent-assistant-scenes {
-    margin-bottom: 16px;
+/* 卡片网格：约束对齐 veriweb agent-card */
+.agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.agent-card {
+  padding: 14px 16px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  background: #fff;
+
+  &:hover {
+    border-color: #c6d5ff;
+    box-shadow: 0 4px 14px rgb(22 100 255 / 10%);
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: #303133;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #909399;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__desc {
+    margin: 10px 0 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: #606266;
+    min-height: 40px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__stats {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f2f5;
+    font-size: 12px;
+    color: #606266;
+  }
+
+  &__foot {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #c0c4cc;
+  }
+
+  &__id {
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 </style>

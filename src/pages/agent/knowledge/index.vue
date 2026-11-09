@@ -76,6 +76,13 @@
         <el-table v-loading="docLoading" :data="documentList" border stripe>
           <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip />
           <el-table-column prop="docType" label="类型" width="100" />
+          <el-table-column label="来源" width="90">
+            <template #default="{ row }">
+              <el-tag :type="row.sourceType === 'doc' ? 'warning' : 'info'" size="small">
+                {{ row.sourceType === "doc" ? "在线文档" : "文件" }}
+              </el-tag>
+            </template>
+          </el-table-column>
           <el-table-column label="大小" width="100">
             <template #default="{ row }">{{ formatBytes(row.byteSize) }}</template>
           </el-table-column>
@@ -172,13 +179,32 @@
         <el-form-item label="类型">
           <el-select v-model="documentForm.docType" style="width: 100%">
             <el-option label="指南 (guide)" value="guide" />
-            <el-option label="政策 (policy)" value="faq" />
+            <el-option label="政策 (policy)" value="policy" />
             <el-option label="问答 (faq)" value="faq" />
             <el-option label="产品 (product)" value="product" />
           </el-select>
         </el-form-item>
-        <el-form-item label="正文">
-          <el-input v-model="documentForm.contentText" type="textarea" :rows="8" placeholder="粘贴正文，或点右侧从 .txt 文件读取" />
+        <el-form-item v-if="!documentIsEdit" label="来源">
+          <el-radio-group v-model="documentForm.sourceType">
+            <el-radio value="file">上传文件 / 文本</el-radio>
+            <el-radio value="doc">在线文档</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item v-if="documentForm.sourceType === 'doc'" label="在线文档">
+          <el-input
+            v-model="documentForm.sourceDocLabel"
+            readonly
+            placeholder="点击选择在线文档"
+            @click="openDocPicker"
+            style="cursor: pointer"
+          >
+            <template #append>
+              <el-button @click="openDocPicker">选择</el-button>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item v-if="documentForm.sourceType === 'file'" label="正文">
+          <el-input v-model="documentForm.contentText" type="textarea" :rows="8" placeholder="粘贴正文，或点下方从文件读取" />
           <input ref="fileInput" type="file" accept=".txt,.md,text/plain" style="display: none" @change="onFileChange" />
           <el-button class="agent-knowledge-file-btn" @click="pickFile">选择文本文件</el-button>
         </el-form-item>
@@ -197,11 +223,39 @@
         <el-button type="primary" :loading="documentSaving" @click="submitDocument">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 在线文档选择器 -->
+    <el-dialog v-model="docPickerVisible" title="选择在线文档" width="640px" append-to-body>
+      <div class="doc-picker">
+        <el-select v-model="pickerSpaceId" placeholder="选择空间" style="width: 100%; margin-bottom: 12px" @change="loadPickerNodes">
+          <el-option v-for="s in pickerSpaces" :key="s.spaceId" :label="s.name" :value="s.spaceId" />
+        </el-select>
+        <el-tree
+          :data="pickerNodeTree"
+          :props="{ label: 'title', children: 'children' }"
+          node-key="nodeId"
+          highlight-current
+          default-expand-all
+          :expand-on-click-node="false"
+          @node-click="onPickerNodeClick"
+          style="max-height: 400px; overflow: auto"
+        >
+          <template #default="{ data }">
+            <span>
+              <el-icon v-if="data.type === 'folder'"><Folder /></el-icon>
+              <el-icon v-else><Document /></el-icon>
+              {{ data.title }}
+            </span>
+          </template>
+        </el-tree>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts">
 import type { IKnowledgeCollectionInfo, IKnowledgeDocumentInfo } from "@/types/api/knowledge"
+import { Document, Folder } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import {
   createKnowledgeCollectionApi,
@@ -214,6 +268,8 @@ import {
   updateKnowledgeCollectionApi,
   updateKnowledgeDocumentApi
 } from "@/api/knowledge"
+import { listNodesApi, listSpacesApi } from "@/api/doc"
+import type { INodeItem, ISpaceItem } from "@/types/api/doc"
 
 const indexStatusLabels: Record<string, string> = {
   pending: "排队中",
@@ -241,6 +297,9 @@ function emptyDocumentForm() {
     documentId: "",
     title: "",
     docType: "guide",
+    sourceType: "file" as "file" | "doc",
+    sourceDocId: "",
+    sourceDocLabel: "",
     contentText: "",
     ragEnabled: true,
     status: 1
@@ -268,6 +327,58 @@ export default defineComponent({
     const documentSaving = ref(false)
     const documentForm = reactive(emptyDocumentForm())
     const fileInput = ref<HTMLInputElement>()
+
+    // 在线文档选择器
+    const docPickerVisible = ref(false)
+    const pickerSpaces = ref<ISpaceItem[]>([])
+    const pickerSpaceId = ref("")
+    const pickerNodes = ref<INodeItem[]>([])
+    const pickerNodeTree = computed(() => {
+      const map = new Map<string, INodeItem & { children?: INodeItem[] }>()
+      pickerNodes.value.forEach((n) => map.set(n.nodeId, { ...n }))
+      const roots: (INodeItem & { children?: INodeItem[] })[] = []
+      pickerNodes.value.forEach((n) => {
+        const node = map.get(n.nodeId)!
+        if (n.parentId && map.has(n.parentId)) {
+          const parent = map.get(n.parentId)!
+          parent.children = parent.children || []
+          parent.children.push(node)
+        } else {
+          roots.push(node)
+        }
+      })
+      return roots
+    })
+
+    const openDocPicker = async () => {
+      docPickerVisible.value = true
+      if (!pickerSpaces.value.length) {
+        const res = await listSpacesApi({ status: 1, page: 1, pageSize: 200 })
+        if (res.code === 0) {
+          pickerSpaces.value = res.result.spaces || []
+          if (pickerSpaces.value.length) {
+            pickerSpaceId.value = pickerSpaces.value[0].spaceId
+            loadPickerNodes()
+          }
+        }
+      }
+    }
+    const loadPickerNodes = async () => {
+      if (!pickerSpaceId.value) return
+      const res = await listNodesApi({ spaceId: pickerSpaceId.value })
+      if (res.code === 0) {
+        pickerNodes.value = res.result.nodes || []
+      }
+    }
+    const onPickerNodeClick = (data: INodeItem) => {
+      if (data.type === "folder" || !data.docId) return
+      documentForm.sourceDocId = data.docId
+      documentForm.sourceDocLabel = data.title
+      if (!documentForm.title) {
+        documentForm.title = data.title
+      }
+      docPickerVisible.value = false
+    }
 
     // 两层目录树：根集合 + 直接子集合
     const collectionTree = computed(() => {
@@ -434,6 +545,9 @@ export default defineComponent({
         documentId: row.documentId,
         title: row.title,
         docType: row.docType || "guide",
+        sourceType: (row.sourceType as "file" | "doc") || "file",
+        sourceDocId: row.sourceDocId || "",
+        sourceDocLabel: row.sourceDocId ? "已关联在线文档" : "",
         contentText: "",
         ragEnabled: row.ragEnabled,
         status: row.status || 1
@@ -467,13 +581,17 @@ export default defineComponent({
         ElMessage.error("请先选择集合")
         return
       }
+      if (!documentIsEdit.value && documentForm.sourceType === "doc" && !documentForm.sourceDocId) {
+        ElMessage.error("请选择在线文档")
+        return
+      }
       documentSaving.value = true
       const res = documentIsEdit.value
         ? await updateKnowledgeDocumentApi({
             documentId: documentForm.documentId,
             title: documentForm.title,
             docType: documentForm.docType,
-            contentText: documentForm.contentText || undefined,
+            contentText: documentForm.sourceType === "file" ? documentForm.contentText || undefined : undefined,
             ragEnabled: documentForm.ragEnabled,
             status: documentForm.status
           })
@@ -481,7 +599,9 @@ export default defineComponent({
             collectionId: currentCollection.value!.collectionId,
             title: documentForm.title,
             docType: documentForm.docType,
-            contentText: documentForm.contentText,
+            sourceType: documentForm.sourceType,
+            sourceDocId: documentForm.sourceType === "doc" ? documentForm.sourceDocId : undefined,
+            contentText: documentForm.sourceType === "file" ? documentForm.contentText : undefined,
             ragEnabled: documentForm.ragEnabled
           })
       documentSaving.value = false
@@ -540,6 +660,13 @@ export default defineComponent({
       documentSaving,
       documentForm,
       fileInput,
+      docPickerVisible,
+      pickerSpaces,
+      pickerSpaceId,
+      pickerNodeTree,
+      openDocPicker,
+      loadPickerNodes,
+      onPickerNodeClick,
       indexStatusLabel,
       indexStatusType,
       formatBytes,

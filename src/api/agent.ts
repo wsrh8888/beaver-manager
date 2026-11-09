@@ -39,6 +39,12 @@ import type {
   ICreateAgentModelRes,
   IUpdateAgentModelReq,
   IDeleteAgentModelReq,
+  IGetAgentCredentialListReq,
+  IGetAgentCredentialListRes,
+  ICreateAgentCredentialReq,
+  ICreateAgentCredentialRes,
+  IUpdateAgentCredentialReq,
+  IDeleteAgentCredentialReq,
   IAiAssistantInfo,
   IGetAiAssistantReq,
   ISaveAiAssistantReq,
@@ -221,6 +227,39 @@ export function deleteAgentMcpServerApi(data: IDeleteAgentMcpServerReq) {
   return ajax<void>({
     method: "DELETE",
     url: `${config.baseAPI}/admin/backend/agent/v1/mcp_delete`,
+    data
+  })
+}
+
+// —— 模型接入通道（两层货架上层）——
+export function getAgentCredentialListApi(params: IGetAgentCredentialListReq) {
+  return ajax<IGetAgentCredentialListRes>({
+    method: "GET",
+    url: `${config.baseAPI}/admin/backend/agent/v1/credential_list`,
+    params
+  })
+}
+
+export function createAgentCredentialApi(data: ICreateAgentCredentialReq) {
+  return ajax<ICreateAgentCredentialRes>({
+    method: "POST",
+    url: `${config.baseAPI}/admin/backend/agent/v1/credential_create`,
+    data
+  })
+}
+
+export function updateAgentCredentialApi(data: IUpdateAgentCredentialReq) {
+  return ajax<void>({
+    method: "PUT",
+    url: `${config.baseAPI}/admin/backend/agent/v1/credential_update`,
+    data
+  })
+}
+
+export function deleteAgentCredentialApi(data: IDeleteAgentCredentialReq) {
+  return ajax<void>({
+    method: "DELETE",
+    url: `${config.baseAPI}/admin/backend/agent/v1/credential_delete`,
     data
   })
 }

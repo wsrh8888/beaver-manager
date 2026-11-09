@@ -42,6 +42,10 @@ export interface IKnowledgeDocumentInfo {
   docType: string // guide|policy|faq|product
   byteSize: number
   sourceRef: string
+  sourceType: string // doc|file
+  sourceDocId: string
+  syncMode: string
+  lastSyncedAt: string
   metadataText: string
   ragEnabled: boolean
   indexStatus: string // pending|indexing|ready|failed
@@ -131,6 +135,10 @@ export interface ICreateKnowledgeDocumentReq {
   title: string
   mediaType?: string
   docType?: string // default=guide
+  sourceType?: string // doc|file
+  sourceDocId?: string // 平台在线文档ID（sourceType=doc 时必填）
+  syncMode?: string // import|direct
+  syncInterval?: number
   sourceRef?: string // 上传后回填的对象存储键
   contentText?: string // 纯文本正文；有则入队索引
   metadataText?: string

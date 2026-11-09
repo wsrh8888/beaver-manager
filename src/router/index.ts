@@ -132,6 +132,12 @@ const router = createRouter({
               component: () => import("@/pages/agent/apps/index.vue")
             },
             {
+              path: "apps/detail",
+              name: "智能体详情",
+              component: () => import("@/pages/agent/apps/detail/index.vue"),
+              meta: { activeMenu: "/agent/apps" }
+            },
+            {
               path: "models",
               name: "模型",
               component: () => import("@/pages/agent/models/index.vue")
@@ -150,6 +156,11 @@ const router = createRouter({
               path: "digitals",
               name: "官方数字伙伴",
               component: () => import("@/pages/agent/digitals/index.vue")
+            },
+            {
+              path: "documents",
+              name: "在线文档",
+              component: () => import("@/pages/agent/documents/index.vue")
             },
             {
               path: "knowledge",

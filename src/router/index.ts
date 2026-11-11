@@ -137,6 +137,19 @@ const router = createRouter({
               component: () => import("@/pages/agent/apps/detail/index.vue"),
               meta: { activeMenu: "/agent/apps" }
             },
+            // 知识源创建必须先于 :knowledgeSourceId，否则 create 会被当成 id
+            {
+              path: "apps/:scene/knowledge/create",
+              name: "AgentKnowledgeSourceCreate",
+              component: () => import("@/pages/agent/apps/knowledge-source/create.vue"),
+              meta: { activeMenu: "/agent/apps" }
+            },
+            {
+              path: "apps/:scene/knowledge/:knowledgeSourceId",
+              name: "AgentKnowledgeSourceDetail",
+              component: () => import("@/pages/agent/apps/knowledge-source/index.vue"),
+              meta: { activeMenu: "/agent/apps" }
+            },
             {
               path: "models",
               name: "模型",

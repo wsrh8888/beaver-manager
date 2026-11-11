@@ -4,427 +4,150 @@
   Project: beaver-manager
   https://github.com/wsrh8888/beaver-manager
 
-  知识源分区：给当前场景挂载可检索的知识库集合。
-  场景智能体只存集合 ID（knowledgeIds），名称与类型实时取平台目录，不在这一层复制。
-  入口与 open 控制台一致：可以「添加」平台已有知识库，也可以「新建」一个空知识库再挂上。
+  知识源分区（列表）：知识源 ≠ 知识库。
+  知识源是 agent_knowledge_source 表里的后端一等实体，归当前场景所有，只持有 platform 索引集合的引用。
+  - 点「创建知识源」进入独立子路由 /agent/apps/:scene/knowledge/create（先选数据源再落库，不在列表页弹输入框）；
+  - 点卡片进入 /agent/apps/:scene/knowledge/:knowledgeSourceId。
+  本组件只负责列表与入口。
 -->
 
 <template>
   <div>
     <div class="ks-head">
       <h3 class="ks-head__title">知识源</h3>
-      <div class="ks-head__actions">
-        <el-button :icon="Files" @click="openCreate">新建知识库</el-button>
-        <el-button type="primary" :icon="Plus" @click="openPlaza">添加知识库</el-button>
-      </div>
+      <el-button type="primary" :icon="Plus" @click="goCreate">创建知识源</el-button>
     </div>
 
-    <div v-loading="listLoading || detailLoading" class="agent-tools knowledge-tab">
-      <section class="agent-tools__panel">
-        <div class="tool-grid">
-          <button type="button" class="tool-card tool-card--entry" @click="openPlaza">
-            <div class="tool-card__body tool-card__body--entry">
-              <el-icon class="tool-card__plus-icon"><Plus /></el-icon>
-              <span class="tool-card__entry-label">添加知识库</span>
-              <span class="tool-card__entry-hint">关联知识库供智能体检索</span>
-            </div>
-          </button>
+    <div v-loading="loading" class="agent-tools">
+      <div class="tool-grid">
+        <button type="button" class="tool-card tool-card--entry" @click="goCreate">
+          <div class="tool-card__body tool-card__body--entry">
+            <el-icon class="tool-card__plus-icon"><Plus /></el-icon>
+            <span class="tool-card__entry-label">创建知识源</span>
+            <span class="tool-card__entry-hint">组合多份在线文档或本地文件供智能体检索</span>
+          </div>
+        </button>
 
-          <button
-            v-for="item in enabledCollections"
-            :key="item.collectionId"
-            type="button"
-            class="tool-card"
-            @click="openDetail(item)"
-          >
-            <div class="tool-card__body">
-              <div class="tool-card__row">
-                <span class="tool-card__icon" :style="{ background: iconTint(item.name) }">
-                  {{ iconLetter(item.name) }}
+        <button
+          v-for="source in sources"
+          :key="source.knowledgeSourceId"
+          type="button"
+          class="tool-card"
+          @click="openSource(source.knowledgeSourceId)"
+        >
+          <div class="tool-card__body">
+            <div class="tool-card__row">
+              <span class="tool-card__icon" :style="{ background: iconTint(source.name) }">
+                {{ iconLetter(source.name) }}
+              </span>
+              <div class="tool-card__text">
+                <span class="tool-card__title">{{ source.name }}</span>
+                <span class="tool-card__subtitle">
+                  {{ source.documentCount }} 篇文档 · 检索 TopK {{ source.retrievalTopK || 8 }}
                 </span>
-                <div class="tool-card__text">
-                  <span class="tool-card__title">{{ item.name }}</span>
-                  <span class="tool-card__subtitle">{{ kindLabel(item.kind) }}</span>
-                </div>
               </div>
-              <p class="tool-card__desc">
-                {{ item.description || "暂无描述" }}
-              </p>
             </div>
-            <div class="tool-card__foot ks-foot">
-              <span class="tool-card__tag">知识库</span>
-              <span class="ks-foot__action">管理 →</span>
-            </div>
-          </button>
-        </div>
-      </section>
+            <p class="tool-card__desc">{{ sourceSummary(source) }}</p>
+          </div>
+          <div class="tool-card__foot ks-foot">
+            <span class="tool-card__tag">知识源</span>
+            <span class="ks-foot__action">管理 →</span>
+          </div>
+        </button>
+      </div>
     </div>
-
-    <!-- 添加知识库：从平台已有集合里挑 -->
-    <el-dialog v-model="plazaVisible" width="760px" destroy-on-close append-to-body class="tool-dialog" :show-close="true">
-      <template #header>
-        <div class="tool-dialog-header">
-          <h2 class="tool-dialog-header__title">添加知识库</h2>
-          <p class="tool-dialog-header__sub">平台已有知识库，添加后本场景即可检索</p>
-        </div>
-      </template>
-      <div class="tool-plaza-toolbar">
-        <el-input v-model="plazaSearch" placeholder="搜索名称、类型…" clearable size="large" :prefix-icon="Search" />
-      </div>
-      <div v-loading="listLoading" class="tool-plaza-grid">
-        <article v-for="item in plazaFiltered" :key="item.collectionId" class="tool-plaza-card">
-          <div class="tool-plaza-card__head">
-            <span class="tool-plaza-card__icon" :style="{ background: iconTint(item.name) }">
-              {{ iconLetter(item.name) }}
-            </span>
-            <div class="tool-card__text">
-              <h4 class="tool-plaza-card__name">{{ item.name }}</h4>
-              <p class="tool-plaza-card__code">{{ kindLabel(item.kind) }}</p>
-            </div>
-          </div>
-          <p class="tool-plaza-card__desc">{{ item.description || "暂无描述" }}</p>
-          <div class="tool-plaza-card__actions">
-            <el-button
-              round
-              size="small"
-              :type="isEnabled(item.collectionId) ? 'info' : 'primary'"
-              :disabled="isEnabled(item.collectionId)"
-              :loading="persisting"
-              @click="addFromPlaza(item)"
-            >
-              {{ isEnabled(item.collectionId) ? "已关联" : "添加" }}
-            </el-button>
-          </div>
-        </article>
-        <p v-if="!plazaFiltered.length && !listLoading" class="tool-plaza-grid__empty">
-          {{ plazaSearch.trim() ? "无匹配知识库" : "暂无知识库" }}
-        </p>
-      </div>
-    </el-dialog>
-
-    <!-- 新建知识库：建一个空集合，建完自动挂到本场景 -->
-    <el-dialog v-model="createVisible" width="560px" destroy-on-close append-to-body class="tool-dialog">
-      <template #header>
-        <div class="tool-dialog-header">
-          <h2 class="tool-dialog-header__title">新建知识库</h2>
-          <p class="tool-dialog-header__sub">新建后自动关联到本场景，文档到「知识库」页导入</p>
-        </div>
-      </template>
-      <el-form label-position="top" @submit.prevent>
-        <el-form-item label="名称" required>
-          <el-input v-model="createForm.name" maxlength="40" show-word-limit placeholder="例如：售后政策库" />
-        </el-form-item>
-        <el-form-item label="类型">
-          <el-select v-model="createForm.kind" class="create-form__select">
-            <el-option label="文档" value="docs" />
-            <el-option label="问答" value="faq" />
-            <el-option label="手册" value="manual" />
-            <el-option label="数据集" value="dataset" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="描述">
-          <el-input
-            v-model="createForm.description"
-            type="textarea"
-            :rows="3"
-            maxlength="200"
-            show-word-limit
-            placeholder="一句话说明这个知识库收录什么内容"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="createVisible = false">取消</el-button>
-        <el-button type="primary" :loading="creating" @click="submitCreate">创建并关联</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 知识库详情 -->
-    <el-dialog v-model="detailVisible" width="480px" destroy-on-close append-to-body class="tool-dialog">
-      <template #header>
-        <div class="tool-dialog-header">
-          <h2 class="tool-dialog-header__title">知识库详情</h2>
-        </div>
-      </template>
-      <template v-if="detailItem">
-        <div class="tool-detail-hero">
-          <span class="tool-detail-hero__icon" :style="{ background: iconTint(detailItem.name) }">
-            {{ iconLetter(detailItem.name) }}
-          </span>
-          <div>
-            <h3 class="tool-detail-hero__name">{{ detailItem.name }}</h3>
-            <p class="tool-detail-hero__code">{{ kindLabel(detailItem.kind) }}</p>
-          </div>
-        </div>
-        <div class="tool-info-grid">
-          <div class="tool-info-grid__row">
-            <span class="tool-info-grid__label">描述</span>
-            <p class="tool-info-grid__value">{{ detailItem.description || "暂无" }}</p>
-          </div>
-          <div class="tool-info-grid__row">
-            <span class="tool-info-grid__label">集合 ID</span>
-            <p class="tool-info-grid__value tool-info-grid__mono">{{ detailItem.collectionId }}</p>
-          </div>
-        </div>
-      </template>
-      <template #footer>
-        <el-button round @click="detailVisible = false">关闭</el-button>
-        <el-button round type="danger" plain :loading="persisting" @click="removeFromDetail">移除</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script lang="ts">
-import type { IAgentAppInfo } from "@/types/api/agent"
-import type { IKnowledgeCollectionInfo } from "@/types/api/knowledge"
-import { Files, Plus, Search } from "@element-plus/icons-vue"
+import { Plus } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
-import { createAgentAppApi, getAgentAppListApi, updateAgentAppApi } from "@/api/agent"
-import { createKnowledgeCollectionApi, getKnowledgeCollectionListApi } from "@/api/knowledge"
+import { useRouter } from "vue-router"
+import { listKnowledgeSourceApi } from "@/api/knowledgeSource"
+import type { IKnowledgeSourceItem } from "@/types/api/knowledgeSource"
 import { iconLetter, iconTint } from "./cardVisual"
-import { parseIdList } from "./shared"
-
-const KIND_LABELS: Record<string, string> = {
-  docs: "文档",
-  faq: "问答",
-  manual: "手册",
-  dataset: "数据集"
-}
-
-function kindLabel(k: string) {
-  return KIND_LABELS[k] || k
-}
-
-/** agent_app 记录还不存在时，补建成功后用它占位，避免下次改动又打一次 create */
-function emptyApp(scene: string): IAgentAppInfo {
-  return {
-    appId: "",
-    name: scene,
-    scene,
-    systemPrompt: "",
-    llmModelId: "",
-    modelParams: "",
-    tools: "",
-    mcpServerIds: "",
-    knowledgeIds: "",
-    openingMessage: "",
-    openingQuestions: "",
-    variables: "",
-    status: 1,
-    sort: 0,
-    createdBy: ""
-  }
-}
 
 export default defineComponent({
   name: "KnowledgeTab",
-  components: { Files, Plus },
   props: {
     scene: { type: String, required: true }
   },
   setup(props) {
-    const listLoading = ref(false)
-    const detailLoading = ref(false)
-    const persisting = ref(false)
-    const collections = ref<IKnowledgeCollectionInfo[]>([])
-    const enabledIds = ref<string[]>([])
-    const currentApp = ref<IAgentAppInfo | null>(null)
+    const router = useRouter()
+    const sources = ref<IKnowledgeSourceItem[]>([])
+    const loading = ref(false)
 
-    const plazaVisible = ref(false)
-    const plazaSearch = ref("")
-    const detailVisible = ref(false)
-    const detailItem = ref<IKnowledgeCollectionInfo | null>(null)
-
-    const createVisible = ref(false)
-    const creating = ref(false)
-    const createForm = reactive({ name: "", kind: "docs", description: "" })
-
-    const collectionMap = computed(() => {
-      const m = new Map<string, IKnowledgeCollectionInfo>()
-      for (const item of collections.value) m.set(item.collectionId, item)
-      return m
-    })
-
-    const enabledCollections = computed(() =>
-      enabledIds.value.map((id) => collectionMap.value.get(id)).filter((c): c is IKnowledgeCollectionInfo => !!c)
-    )
-
-    const enabledSet = computed(() => new Set(enabledIds.value))
-
-    const plazaFiltered = computed(() => {
-      const q = plazaSearch.value.trim().toLowerCase()
-      if (!q) return collections.value
-      return collections.value.filter(
-        (item) =>
-          item.name.toLowerCase().includes(q) ||
-          item.kind.toLowerCase().includes(q) ||
-          (item.description || "").toLowerCase().includes(q)
-      )
-    })
-
-    function isEnabled(collectionId: string) {
-      return enabledSet.value.has(collectionId)
-    }
-
-    async function loadCollections() {
-      listLoading.value = true
-      const res = await getKnowledgeCollectionListApi({ status: 1, page: 1, pageSize: 200 })
-      listLoading.value = false
-      if (res.code === 0) collections.value = res.result.list || []
-    }
-
-    async function loadDetail() {
-      detailLoading.value = true
-      const res = await getAgentAppListApi({ scene: props.scene, page: 1, pageSize: 20 })
-      detailLoading.value = false
-      const app = res.code === 0 ? (res.result.list || []).find((a) => a.scene === props.scene) || null : null
-      currentApp.value = app
-      enabledIds.value = parseIdList(app?.knowledgeIds || "")
-    }
-
-    async function persist() {
-      const knowledgeIds = JSON.stringify(enabledIds.value)
-      const app = currentApp.value
-      persisting.value = true
-      const res = app
-        ? await updateAgentAppApi({
-            appId: app.appId,
-            name: app.name,
-            scene: app.scene,
-            systemPrompt: app.systemPrompt,
-            llmModelId: app.llmModelId,
-            modelParams: app.modelParams,
-            tools: app.tools,
-            mcpServerIds: app.mcpServerIds,
-            knowledgeIds,
-            openingMessage: app.openingMessage,
-            openingQuestions: app.openingQuestions,
-            variables: app.variables,
-            status: app.status,
-            sort: app.sort
-          })
-        : await createAgentAppApi({
-            name: props.scene,
-            scene: props.scene,
-            knowledgeIds,
-            status: 1
-          })
-      persisting.value = false
-      if (res.code !== 0) {
-        ElMessage.error(res.msg || "保存失败")
-        return false
+    function errorMessage(err: unknown, fallback: string): string {
+      if (err instanceof Error && err.message) return err.message
+      if (err && typeof err === "object" && "msg" in err) {
+        return String((err as { msg?: string }).msg || fallback)
       }
-      // 新建后记住 appId，后续 update 才不会又去打 create
-      if (!app && res.result?.appId) {
-        currentApp.value = { ...emptyApp(props.scene), appId: res.result.appId, knowledgeIds }
-      }
-      return true
+      return fallback
     }
 
-    function openPlaza() {
-      plazaSearch.value = ""
-      plazaVisible.value = true
-    }
-
-    async function addFromPlaza(item: IKnowledgeCollectionInfo) {
-      if (isEnabled(item.collectionId)) return
-      enabledIds.value.push(item.collectionId)
-      const ok = await persist()
-      if (ok) ElMessage.success("已添加")
-    }
-
-    function openCreate() {
-      createForm.name = ""
-      createForm.kind = "docs"
-      createForm.description = ""
-      createVisible.value = true
-    }
-
-    async function submitCreate() {
-      const name = createForm.name.trim()
-      if (name.length < 2) {
-        ElMessage.warning("名称至少 2 个字符")
+    async function loadSources() {
+      if (!props.scene) {
+        sources.value = []
         return
       }
-      if (creating.value) return
-      creating.value = true
+      loading.value = true
       try {
-        const res = await createKnowledgeCollectionApi({
-          name,
-          kind: createForm.kind,
-          description: createForm.description.trim() || undefined,
-          status: 1
-        })
-        if (res.code !== 0) throw new Error(res.msg || "创建失败")
-        const collectionId = res.result?.collectionId
-        if (!collectionId) throw new Error("创建成功但未返回集合 ID")
-        await loadCollections()
-        enabledIds.value = Array.from(new Set([...enabledIds.value, collectionId]))
-        const ok = await persist()
-        if (!ok) throw new Error("知识库已创建，但关联到本场景失败")
-        createVisible.value = false
-        ElMessage.success("知识库已创建并关联")
+        const res = await listKnowledgeSourceApi({ scene: props.scene })
+        if (res.code !== 0) throw new Error(res.msg || "加载知识源失败")
+        sources.value = res.result?.list ?? []
       } catch (err) {
-        ElMessage.error(err instanceof Error && err.message ? err.message : "创建失败")
+        ElMessage.error(errorMessage(err, "加载知识源失败"))
       } finally {
-        creating.value = false
+        loading.value = false
       }
     }
 
-    function openDetail(item: IKnowledgeCollectionInfo) {
-      detailItem.value = item
-      detailVisible.value = true
+    function sourceSummary(source: IKnowledgeSourceItem): string {
+      if (source.documentCount > 0) return `${source.documentCount} 篇文档已导入`
+      return "还没有导入文档"
     }
 
-    async function removeFromDetail() {
-      if (!detailItem.value) return
-      const idx = enabledIds.value.indexOf(detailItem.value.collectionId)
-      if (idx >= 0) enabledIds.value.splice(idx, 1)
-      const ok = await persist()
-      if (ok) {
-        detailVisible.value = false
-        ElMessage.success("已移除")
+    /** 创建：直接进独立子路由，先选数据源，再由子路由落库 */
+    function goCreate() {
+      if (!props.scene) return
+      void router.push({ name: "AgentKnowledgeSourceCreate", params: { scene: props.scene } })
+    }
+
+    /** 点卡片进入独立子路由，详情数据由子路由页按 id 自行加载 */
+    function openSource(knowledgeSourceId: string) {
+      if (!props.scene) return
+      void router.push({
+        name: "AgentKnowledgeSourceDetail",
+        params: { scene: props.scene, knowledgeSourceId }
+      })
+    }
+
+    watch(
+      () => props.scene,
+      () => {
+        void loadSources()
       }
-    }
+    )
 
-    onMounted(async () => {
-      await Promise.all([loadCollections(), loadDetail()])
+    onMounted(() => {
+      void loadSources()
     })
 
     return {
-      Files,
       Plus,
-      Search,
-      listLoading,
-      detailLoading,
-      persisting,
-      collections,
-      enabledCollections,
-      plazaVisible,
-      plazaSearch,
-      detailVisible,
-      detailItem,
-      plazaFiltered,
-      createVisible,
-      creating,
-      createForm,
+      sources,
+      loading,
+      sourceSummary,
       iconLetter,
       iconTint,
-      kindLabel,
-      isEnabled,
-      openPlaza,
-      addFromPlaza,
-      openCreate,
-      submitCreate,
-      openDetail,
-      removeFromDetail
+      goCreate,
+      openSource
     }
   }
 })
 </script>
 
-<style lang="less" scoped>
+<style scoped lang="less">
 @import "./toolUi.less";
 
 .ks-head {
@@ -440,12 +163,6 @@ export default defineComponent({
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
 }
 
 .ks-foot {
@@ -457,9 +174,5 @@ export default defineComponent({
     font-size: 12px;
     color: var(--el-color-primary);
   }
-}
-
-.create-form__select {
-  width: 200px;
 }
 </style>

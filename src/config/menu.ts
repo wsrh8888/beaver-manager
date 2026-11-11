@@ -23,7 +23,6 @@ import type { Component } from "vue"
 import {
   Avatar,
   ChatLineRound,
-  Collection,
   Connection,
   Cpu,
   Document,
@@ -97,11 +96,9 @@ export const menuConfig: MenuItem[] = [
     children: [
       { path: "/agent/apps", title: "场景智能体", icon: Cpu },
       { path: "/agent/models", title: "模型", icon: Coin },
-      { path: "/agent/tools", title: "工具", icon: SetUp },
+      { path: "/agent/tools", title: "技能", icon: SetUp },
       { path: "/agent/mcp", title: "MCP", icon: Connection },
-      { path: "/agent/digitals", title: "官方数字伙伴", icon: Avatar },
-      { path: "/agent/documents", title: "在线文档", icon: Document },
-      { path: "/agent/knowledge", title: "知识库", icon: Collection }
+      { path: "/agent/digitals", title: "官方数字伙伴", icon: Avatar }
     ]
   },
   {

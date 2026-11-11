@@ -453,6 +453,23 @@
   }
 }
 
+// 技能正文预览（工具详情弹窗）
+.tool-detail-body {
+  max-height: 240px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  overflow: auto;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--el-text-color-regular);
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 10px;
+}
+
 :deep(.tool-dialog) {
   .el-dialog__header {
     padding-bottom: 8px;

@@ -226,6 +226,10 @@ export interface IDeleteAgentAppReq {
 export interface IAgentToolInfo {
   toolId: string
   name: string
+  description: string
+  version: string
+  skillMd: string
+  fileName: string
   toolType: string
   config: string
   status: number
@@ -251,7 +255,11 @@ export interface IGetAgentToolRes {
 
 export interface ICreateAgentToolReq {
   name: string
-  toolType: string
+  description?: string
+  version?: string
+  skillMd?: string
+  fileName?: string
+  toolType?: string
   config?: string
   status?: number
   sort?: number
@@ -261,12 +269,28 @@ export interface ICreateAgentToolRes {
   toolId: string
 }
 
-export interface IUpdateAgentToolReq extends ICreateAgentToolReq {
+export interface IUpdateAgentToolReq extends Partial<ICreateAgentToolReq> {
   toolId: string
 }
 
 export interface IDeleteAgentToolReq {
   toolId: string
+}
+
+// 上传 SKILL.md 解析结果（不落库，确认后再建技能）
+export interface IParseAgentToolFileReq {
+  fileName: string
+  data: string
+}
+
+export interface IParseAgentToolFileRes {
+  name: string
+  description: string
+  version: string
+  skillMd: string
+  fileName: string
+  config: string
+  msg: string
 }
 
 export interface IAgentMcpServerInfo {

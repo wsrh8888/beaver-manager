@@ -157,7 +157,7 @@ const router = createRouter({
             },
             {
               path: "tools",
-              name: "智能体工具",
+              name: "技能",
               component: () => import("@/pages/agent/tools/index.vue")
             },
             {
@@ -169,16 +169,6 @@ const router = createRouter({
               path: "digitals",
               name: "官方数字伙伴",
               component: () => import("@/pages/agent/digitals/index.vue")
-            },
-            {
-              path: "documents",
-              name: "在线文档",
-              component: () => import("@/pages/agent/documents/index.vue")
-            },
-            {
-              path: "knowledge",
-              name: "知识库",
-              component: () => import("@/pages/agent/knowledge/index.vue")
             }
           ]
         },

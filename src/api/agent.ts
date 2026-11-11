@@ -58,7 +58,9 @@ import type {
   IGetAgentToolRes,
   IUpdateAgentAppReq,
   IUpdateAgentMcpServerReq,
-  IUpdateAgentToolReq
+  IUpdateAgentToolReq,
+  IParseAgentToolFileReq,
+  IParseAgentToolFileRes
 } from "@/types/api/agent"
 import config from "@/config/env"
 import { ajax } from "@/utils/request"
@@ -139,6 +141,15 @@ export function createAgentToolApi(data: ICreateAgentToolReq) {
   return ajax<ICreateAgentToolRes>({
     method: "POST",
     url: `${config.baseAPI}/admin/backend/agent/v1/tool_create`,
+    data
+  })
+}
+
+// 上传 SKILL.md，只解析不入库
+export function parseAgentToolFileApi(data: IParseAgentToolFileReq) {
+  return ajax<IParseAgentToolFileRes>({
+    method: "POST",
+    url: `${config.baseAPI}/admin/backend/agent/v1/tool_parse`,
     data
   })
 }

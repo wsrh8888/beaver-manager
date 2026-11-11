@@ -50,11 +50,11 @@
               </span>
               <div class="tool-card__text">
                 <span class="tool-card__title">{{ tool.name }}</span>
-                <span class="tool-card__subtitle">{{ toolTypeLabel(tool.toolType) }}</span>
+                <span class="tool-card__subtitle">{{ tool.fileName || "SKILL.md" }}</span>
               </div>
             </div>
             <p class="tool-card__desc">
-              {{ toolConfigPreview(tool.config) }}
+              {{ tool.description || "没有写描述" }}
             </p>
           </div>
         </button>
@@ -122,10 +122,10 @@
             </span>
             <div class="tool-card__text">
               <h4 class="tool-plaza-card__name">{{ item.name }}</h4>
-              <p class="tool-plaza-card__code">{{ toolTypeLabel(item.toolType) }}</p>
+              <p class="tool-plaza-card__code">{{ item.fileName || "SKILL.md" }}</p>
             </div>
           </div>
-          <p class="tool-plaza-card__desc">{{ toolConfigPreview(item.config) }}</p>
+          <p class="tool-plaza-card__desc">{{ item.description || "没有写描述" }}</p>
           <div class="tool-plaza-card__actions">
             <el-button
               round
@@ -140,13 +140,13 @@
           </div>
         </article>
         <p v-if="!plazaFiltered.length && !catalogLoading" class="tool-plaza-grid__empty">
-          {{ plazaSearch.trim() ? "无匹配工具" : "暂无工具" }}
+          {{ plazaSearch.trim() ? "无匹配技能" : "平台还没有技能，先到「技能」页上传一份 SKILL.md" }}
         </p>
       </div>
     </el-dialog>
 
     <!-- 工具详情弹窗 -->
-    <el-dialog v-model="detailVisible" width="480px" destroy-on-close class="tool-dialog">
+    <el-dialog v-model="detailVisible" width="560px" destroy-on-close class="tool-dialog">
       <template #header>
         <div class="tool-dialog-header">
           <h2 class="tool-dialog-header__title">工具详情</h2>
@@ -159,19 +159,20 @@
           </span>
           <div>
             <h3 class="tool-detail-hero__name">{{ detailItem.name }}</h3>
-            <p class="tool-detail-hero__code">{{ toolTypeLabel(detailItem.toolType) }}</p>
+            <p class="tool-detail-hero__code">{{ detailItem.fileName || "SKILL.md" }}</p>
           </div>
         </div>
         <div class="tool-info-grid">
           <div class="tool-info-grid__row">
-            <span class="tool-info-grid__label">配置</span>
-            <p class="tool-info-grid__value tool-info-grid__mono">{{ detailItem.config || "无" }}</p>
+            <span class="tool-info-grid__label">描述</span>
+            <p class="tool-info-grid__value">{{ detailItem.description || "没有写描述" }}</p>
           </div>
           <div class="tool-info-grid__row">
             <span class="tool-info-grid__label">工具 ID</span>
             <p class="tool-info-grid__value tool-info-grid__mono">{{ detailItem.toolId }}</p>
           </div>
         </div>
+        <pre v-if="detailItem.skillMd" class="tool-detail-body">{{ detailItem.skillMd }}</pre>
       </template>
       <template #footer>
         <el-button round @click="detailVisible = false">关闭</el-button>
@@ -280,31 +281,6 @@ import {
 import { iconLetter, iconTint } from "./cardVisual"
 import { parseIdList } from "./shared"
 
-const TOOL_TYPE_LABELS: Record<string, string> = {
-  builtin: "内置",
-  mcp: "MCP",
-  api: "HTTP",
-  workflow: "工作流"
-}
-
-function toolTypeLabel(t: string) {
-  return TOOL_TYPE_LABELS[t] || t
-}
-
-function toolConfigPreview(config: string) {
-  if (!config) return "无配置"
-  try {
-    const o = JSON.parse(config)
-    if (typeof o === "object" && o) {
-      const entries = Object.entries(o).slice(0, 3)
-      return entries.map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join("  ") || "无配置"
-    }
-  } catch {
-    /* ignore */
-  }
-  return config.slice(0, 80)
-}
-
 export default defineComponent({
   name: "ToolsTab",
   props: {
@@ -353,7 +329,7 @@ export default defineComponent({
       return catalog.value.filter(
         (item) =>
           item.name.toLowerCase().includes(q) ||
-          item.toolType.toLowerCase().includes(q) ||
+          (item.description || "").toLowerCase().includes(q) ||
           item.toolId.toLowerCase().includes(q)
       )
     })
@@ -552,8 +528,6 @@ export default defineComponent({
       mcpForm,
       iconLetter,
       iconTint,
-      toolTypeLabel,
-      toolConfigPreview,
       isEnabled,
       isBound,
       openPlaza,

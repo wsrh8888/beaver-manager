@@ -6,13 +6,17 @@
 
   知识源分区：给当前场景挂载可检索的知识库集合。
   场景智能体只存集合 ID（knowledgeIds），名称与类型实时取平台目录，不在这一层复制。
+  入口与 open 控制台一致：可以「添加」平台已有知识库，也可以「新建」一个空知识库再挂上。
 -->
 
 <template>
   <div>
     <div class="ks-head">
       <h3 class="ks-head__title">知识源</h3>
-      <el-button type="primary" :icon="Plus" @click="openPlaza">添加知识库</el-button>
+      <div class="ks-head__actions">
+        <el-button :icon="Files" @click="openCreate">新建知识库</el-button>
+        <el-button type="primary" :icon="Plus" @click="openPlaza">添加知识库</el-button>
+      </div>
     </div>
 
     <div v-loading="listLoading || detailLoading" class="agent-tools knowledge-tab">
@@ -56,11 +60,12 @@
       </section>
     </div>
 
-    <!-- 添加知识库弹窗 -->
+    <!-- 添加知识库：从平台已有集合里挑 -->
     <el-dialog v-model="plazaVisible" width="760px" destroy-on-close append-to-body class="tool-dialog" :show-close="true">
       <template #header>
         <div class="tool-dialog-header">
           <h2 class="tool-dialog-header__title">添加知识库</h2>
+          <p class="tool-dialog-header__sub">平台已有知识库，添加后本场景即可检索</p>
         </div>
       </template>
       <div class="tool-plaza-toolbar">
@@ -97,7 +102,44 @@
       </div>
     </el-dialog>
 
-    <!-- 知识库详情弹窗 -->
+    <!-- 新建知识库：建一个空集合，建完自动挂到本场景 -->
+    <el-dialog v-model="createVisible" width="560px" destroy-on-close append-to-body class="tool-dialog">
+      <template #header>
+        <div class="tool-dialog-header">
+          <h2 class="tool-dialog-header__title">新建知识库</h2>
+          <p class="tool-dialog-header__sub">新建后自动关联到本场景，文档到「知识库」页导入</p>
+        </div>
+      </template>
+      <el-form label-position="top" @submit.prevent>
+        <el-form-item label="名称" required>
+          <el-input v-model="createForm.name" maxlength="40" show-word-limit placeholder="例如：售后政策库" />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="createForm.kind" class="create-form__select">
+            <el-option label="文档" value="docs" />
+            <el-option label="问答" value="faq" />
+            <el-option label="手册" value="manual" />
+            <el-option label="数据集" value="dataset" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input
+            v-model="createForm.description"
+            type="textarea"
+            :rows="3"
+            maxlength="200"
+            show-word-limit
+            placeholder="一句话说明这个知识库收录什么内容"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="creating" @click="submitCreate">创建并关联</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 知识库详情 -->
     <el-dialog v-model="detailVisible" width="480px" destroy-on-close append-to-body class="tool-dialog">
       <template #header>
         <div class="tool-dialog-header">
@@ -136,10 +178,10 @@
 <script lang="ts">
 import type { IAgentAppInfo } from "@/types/api/agent"
 import type { IKnowledgeCollectionInfo } from "@/types/api/knowledge"
-import { Plus, Search } from "@element-plus/icons-vue"
+import { Files, Plus, Search } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { createAgentAppApi, getAgentAppListApi, updateAgentAppApi } from "@/api/agent"
-import { getKnowledgeCollectionListApi } from "@/api/knowledge"
+import { createKnowledgeCollectionApi, getKnowledgeCollectionListApi } from "@/api/knowledge"
 import { iconLetter, iconTint } from "./cardVisual"
 import { parseIdList } from "./shared"
 
@@ -177,7 +219,7 @@ function emptyApp(scene: string): IAgentAppInfo {
 
 export default defineComponent({
   name: "KnowledgeTab",
-  components: { Plus },
+  components: { Files, Plus },
   props: {
     scene: { type: String, required: true }
   },
@@ -193,6 +235,10 @@ export default defineComponent({
     const plazaSearch = ref("")
     const detailVisible = ref(false)
     const detailItem = ref<IKnowledgeCollectionInfo | null>(null)
+
+    const createVisible = ref(false)
+    const creating = ref(false)
+    const createForm = reactive({ name: "", kind: "docs", description: "" })
 
     const collectionMap = computed(() => {
       const m = new Map<string, IKnowledgeCollectionInfo>()
@@ -288,6 +334,44 @@ export default defineComponent({
       if (ok) ElMessage.success("已添加")
     }
 
+    function openCreate() {
+      createForm.name = ""
+      createForm.kind = "docs"
+      createForm.description = ""
+      createVisible.value = true
+    }
+
+    async function submitCreate() {
+      const name = createForm.name.trim()
+      if (name.length < 2) {
+        ElMessage.warning("名称至少 2 个字符")
+        return
+      }
+      if (creating.value) return
+      creating.value = true
+      try {
+        const res = await createKnowledgeCollectionApi({
+          name,
+          kind: createForm.kind,
+          description: createForm.description.trim() || undefined,
+          status: 1
+        })
+        if (res.code !== 0) throw new Error(res.msg || "创建失败")
+        const collectionId = res.result?.collectionId
+        if (!collectionId) throw new Error("创建成功但未返回集合 ID")
+        await loadCollections()
+        enabledIds.value = Array.from(new Set([...enabledIds.value, collectionId]))
+        const ok = await persist()
+        if (!ok) throw new Error("知识库已创建，但关联到本场景失败")
+        createVisible.value = false
+        ElMessage.success("知识库已创建并关联")
+      } catch (err) {
+        ElMessage.error(err instanceof Error && err.message ? err.message : "创建失败")
+      } finally {
+        creating.value = false
+      }
+    }
+
     function openDetail(item: IKnowledgeCollectionInfo) {
       detailItem.value = item
       detailVisible.value = true
@@ -309,6 +393,7 @@ export default defineComponent({
     })
 
     return {
+      Files,
       Plus,
       Search,
       listLoading,
@@ -321,12 +406,17 @@ export default defineComponent({
       detailVisible,
       detailItem,
       plazaFiltered,
+      createVisible,
+      creating,
+      createForm,
       iconLetter,
       iconTint,
       kindLabel,
       isEnabled,
       openPlaza,
       addFromPlaza,
+      openCreate,
+      submitCreate,
       openDetail,
       removeFromDetail
     }
@@ -350,6 +440,12 @@ export default defineComponent({
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 }
 
 .ks-foot {
@@ -361,5 +457,9 @@ export default defineComponent({
     font-size: 12px;
     color: var(--el-color-primary);
   }
+}
+
+.create-form__select {
+  width: 200px;
 }
 </style>

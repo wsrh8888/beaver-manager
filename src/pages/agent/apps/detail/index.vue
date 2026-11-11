@@ -17,7 +17,7 @@
       </button>
 
       <div class="app-detail__title-row">
-        <h1 class="app-detail__title">{{ sceneLabel }}</h1>
+        <h1 class="app-detail__title">{{ title }}</h1>
         <span class="app-detail__scene">{{ scene }}</span>
       </div>
     </header>
@@ -29,7 +29,7 @@
       <OrchestrationTab v-if="active === 'orchestration'" :scene="scene" />
       <KnowledgeTab v-else-if="active === 'knowledge'" :scene="scene" />
       <ToolsTab v-else-if="active === 'tools'" :scene="scene" />
-      <SettingsTab v-else-if="active === 'settings'" :scene="scene" />
+      <SettingsTab v-else-if="active === 'settings'" :scene="scene" @saved="loadSceneName" />
     </div>
   </div>
 </template>
@@ -37,6 +37,7 @@
 <script lang="ts">
 import { ArrowLeft } from "@element-plus/icons-vue"
 import { useRoute, useRouter } from "vue-router"
+import { getAiAssistantApi } from "@/api/agent"
 import TabNav from "../components/TabNav.vue"
 import OrchestrationTab from "./tabs/OrchestrationTab.vue"
 import KnowledgeTab from "./tabs/KnowledgeTab.vue"
@@ -66,6 +67,14 @@ export default defineComponent({
 
     const scene = computed(() => String(route.query.scene || "assistant"))
     const sceneLabel = computed(() => SCENE_LABELS[scene.value] || scene.value)
+    /** 设置里可以改名称，标题优先用配置里的名字，没配过才回落到场景固定名 */
+    const assistantName = ref("")
+    const title = computed(() => assistantName.value || sceneLabel.value)
+
+    const loadSceneName = async () => {
+      const res = await getAiAssistantApi({ scene: scene.value })
+      assistantName.value = res.code === 0 ? res.result.assistant?.name || "" : ""
+    }
 
     const active = computed(() => {
       const queryTab = String(route.query.tab || "")
@@ -79,7 +88,10 @@ export default defineComponent({
 
     const goBack = () => router.push("/agent/apps")
 
-    return { scene, sceneLabel, active, select, goBack, TABS }
+    onMounted(loadSceneName)
+    watch(scene, loadSceneName)
+
+    return { scene, sceneLabel, title, loadSceneName, active, select, goBack, TABS }
   }
 })
 </script>

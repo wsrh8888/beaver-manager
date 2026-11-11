@@ -85,7 +85,12 @@ const SCENE_LABELS: Record<string, string> = {
   moment: "朋友圈",
   workbench: "工作台"
 }
-const STYLE_LABELS: Record<string, string> = { stable: "更稳定", balanced: "默认", creative: "更发散" }
+const STYLE_LABELS: Record<string, string> = {
+  stable: "更稳定",
+  balanced: "默认",
+  creative: "更发散",
+  custom: "自定义"
+}
 
 export default defineComponent({
   name: "AgentAppsListPage",

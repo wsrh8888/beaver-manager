@@ -2,7 +2,7 @@
  * 智能体详情 Tab 共享工具函数
  */
 
-export type GenerationStyle = "stable" | "balanced" | "creative"
+export type GenerationStyle = "stable" | "balanced" | "creative" | "custom"
 
 export interface IModelParams {
   temperature: number
@@ -10,7 +10,7 @@ export interface IModelParams {
   maxOutputTokens: number
 }
 
-export const GENERATION_STYLE_PARAMS: Record<GenerationStyle, IModelParams> = {
+export const GENERATION_STYLE_PARAMS: Record<Exclude<GenerationStyle, "custom">, IModelParams> = {
   stable: { temperature: 0.3, topP: 0.85, maxOutputTokens: 4096 },
   balanced: { temperature: 0.7, topP: 0.9, maxOutputTokens: 4096 },
   creative: { temperature: 1, topP: 0.95, maxOutputTokens: 4096 }
@@ -54,11 +54,11 @@ export function parseModelParams(raw: string): IModelParams {
 }
 
 export function styleFromParams(params: IModelParams): GenerationStyle {
-  for (const style of ["stable", "balanced", "creative"] as GenerationStyle[]) {
+  for (const style of ["stable", "balanced", "creative"] as Array<Exclude<GenerationStyle, "custom">>) {
     const p = GENERATION_STYLE_PARAMS[style]
     if (Math.abs(params.temperature - p.temperature) < 0.06) return style
   }
-  return "balanced"
+  return "custom"
 }
 
 export function parseVars(raw: string): IPromptVariable[] {

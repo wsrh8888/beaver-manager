@@ -42,42 +42,48 @@
         </el-button>
       </template>
 
-      <p v-if="!vars.length" class="orch-empty">还没有变量。纯对话型智能体可以不配置。</p>
+      <div class="ds-editor">
+        <div class="ds-editor__head">
+          <span>共 {{ vars.length }} 个变量</span>
+        </div>
 
-      <div v-else class="var-list">
-        <div v-for="(row, index) in vars" :key="index" class="var-row">
-          <div class="var-cell var-cell--name">
-            <span class="var-cell__label">变量名</span>
-            <el-input v-model="row.key" placeholder="order_id" maxlength="64" />
-          </div>
-          <div class="var-cell var-cell--label">
-            <span class="var-cell__label">展示标签</span>
-            <el-input v-model="row.label" placeholder="订单号" maxlength="128" />
-          </div>
-          <div class="var-cell var-cell--type">
-            <span class="var-cell__label">类型</span>
-            <el-select v-model="row.type">
-              <el-option label="单行文本" value="text" />
-              <el-option label="段落" value="paragraph" />
-              <el-option label="下拉" value="select" />
-              <el-option label="数字" value="number" />
-            </el-select>
-          </div>
-          <div class="var-cell var-cell--default">
-            <span class="var-cell__label">默认值</span>
-            <el-input v-model="row.defaultValue" placeholder="可选" maxlength="512" />
-          </div>
-          <div class="var-cell var-cell--required">
-            <span class="var-cell__label">必填</span>
-            <el-switch v-model="row.required" />
-          </div>
-          <el-button class="var-row__remove" link type="danger" @click="removeVariable(index)">
-            删除
-          </el-button>
+        <p v-if="!vars.length" class="orch-empty">还没有变量。纯对话型智能体可以不配置。</p>
 
-          <div v-if="row.type === 'select'" class="var-row__options">
-            <span class="var-cell__label">下拉选项</span>
-            <IdTagsEditor v-model="row.options" placeholder="输入一个选项后按回车" />
+        <div v-else class="var-list">
+          <div v-for="(row, index) in vars" :key="index" class="var-row">
+            <div class="var-cell var-cell--name">
+              <span class="var-cell__label">变量名</span>
+              <el-input v-model="row.key" placeholder="order_id" maxlength="64" />
+            </div>
+            <div class="var-cell var-cell--label">
+              <span class="var-cell__label">展示标签</span>
+              <el-input v-model="row.label" placeholder="订单号" maxlength="128" />
+            </div>
+            <div class="var-cell var-cell--type">
+              <span class="var-cell__label">类型</span>
+              <el-select v-model="row.type">
+                <el-option label="单行文本" value="text" />
+                <el-option label="段落" value="paragraph" />
+                <el-option label="下拉" value="select" />
+                <el-option label="数字" value="number" />
+              </el-select>
+            </div>
+            <div class="var-cell var-cell--default">
+              <span class="var-cell__label">默认值</span>
+              <el-input v-model="row.defaultValue" placeholder="可选" maxlength="512" />
+            </div>
+            <div class="var-cell var-cell--required">
+              <span class="var-cell__label">必填</span>
+              <el-switch v-model="row.required" />
+            </div>
+            <el-button class="var-row__remove" link type="danger" @click="removeVariable(index)">
+              删除
+            </el-button>
+
+            <div v-if="row.type === 'select'" class="var-row__options">
+              <span class="var-cell__label">下拉选项</span>
+              <IdTagsEditor v-model="row.options" placeholder="输入一个选项后按回车" />
+            </div>
           </div>
         </div>
       </div>
@@ -121,7 +127,23 @@
             <el-radio-button value="stable">更稳定</el-radio-button>
             <el-radio-button value="balanced">默认</el-radio-button>
             <el-radio-button value="creative">更发散</el-radio-button>
+            <el-radio-button value="custom">自定义</el-radio-button>
           </el-radio-group>
+          <p class="ds-hint" style="margin-top: var(--ds-space-2)">
+            通过 temperature 控制：更稳定 0.3 / 默认 0.7 / 更发散 1.0。
+          </p>
+        </el-form-item>
+
+        <el-form-item v-if="generationStyle === 'custom'" label="temperature">
+          <el-input-number v-model="temperature" :min="0" :max="2" :step="0.1" :precision="1" controls-position="right" />
+        </el-form-item>
+
+        <el-form-item label="topP">
+          <el-input-number v-model="baseParams.topP" :min="0" :max="1" :step="0.05" :precision="2" controls-position="right" />
+        </el-form-item>
+
+        <el-form-item label="最大输出 token">
+          <el-input-number v-model="baseParams.maxOutputTokens" :min="256" :max="32768" :step="256" controls-position="right" />
         </el-form-item>
       </el-form>
     </FormCard>
@@ -147,7 +169,6 @@ import {
   parseModelParams,
   parseOpeningQuestions,
   parseVars,
-  styleFromParams,
   type GenerationStyle,
   type IPromptVariable
 } from "./shared"
@@ -172,7 +193,22 @@ export default defineComponent({
       openingMessage: "",
       llmModelId: ""
     })
-    const generationStyle = ref<GenerationStyle>("balanced")
+    /** temperature 是唯一由「生成风格」驱动的参数；topP / maxOutputTokens 单独可调，保存时一起写回 */
+    const temperature = ref<number | null>(0.7)
+    const baseParams = reactive({ topP: 0.9, maxOutputTokens: 4096 })
+    const generationStyle = computed<GenerationStyle>({
+      get() {
+        if (temperature.value === null) return "balanced"
+        const matched = (Object.keys(GENERATION_STYLE_PARAMS) as Array<Exclude<GenerationStyle, "custom">>)
+          .find((key) => Math.abs(GENERATION_STYLE_PARAMS[key].temperature - (temperature.value as number)) < 0.001)
+        return matched ?? "custom"
+      },
+      set(value) {
+        temperature.value = value === "custom"
+          ? (temperature.value ?? 0.7)
+          : GENERATION_STYLE_PARAMS[value].temperature
+      }
+    })
     const openingQuestions = ref<string[]>([])
     const vars = ref<IPromptVariable[]>([])
 
@@ -212,7 +248,10 @@ export default defineComponent({
           form.systemPrompt = assistant.systemPrompt || ""
           form.openingMessage = assistant.openingMessage || ""
           form.llmModelId = assistant.llmModelId || ""
-          generationStyle.value = styleFromParams(parseModelParams(assistant.modelParams))
+          const params = parseModelParams(assistant.modelParams)
+          temperature.value = params.temperature
+          baseParams.topP = params.topP
+          baseParams.maxOutputTokens = params.maxOutputTokens
         }
         openingQuestions.value = parseOpeningQuestions(app?.openingQuestions || "")
         vars.value = parseVars(app?.variables || "")
@@ -234,7 +273,11 @@ export default defineComponent({
 
     /** 编排字段：只提交本分区负责的字段，工具/MCP 归工具分区管，不要顺手覆盖 */
     const saveAssistant = async () => {
-      const modelParams = JSON.stringify(GENERATION_STYLE_PARAMS[generationStyle.value])
+      const modelParams = JSON.stringify({
+        temperature: temperature.value ?? 0.7,
+        topP: baseParams.topP,
+        maxOutputTokens: baseParams.maxOutputTokens
+      })
       const res = await saveAiAssistantApi({
         scene: props.scene,
         systemPrompt: form.systemPrompt,
@@ -331,7 +374,7 @@ export default defineComponent({
     }
 
     watch(
-      () => [form.systemPrompt, form.openingMessage, form.llmModelId, generationStyle.value],
+      () => [form.systemPrompt, form.openingMessage, form.llmModelId, temperature.value, baseParams.topP, baseParams.maxOutputTokens],
       () => {
         dirtyAssistant.value = true
         schedule()
@@ -382,6 +425,8 @@ export default defineComponent({
       loading,
       modelOptions,
       form,
+      temperature,
+      baseParams,
       generationStyle,
       openingQuestions,
       vars,

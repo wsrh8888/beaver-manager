@@ -68,13 +68,21 @@
     <!-- MCP -->
     <section v-else v-loading="mcpLoading || detailLoading" class="agent-tools__panel">
       <div class="tool-grid">
+        <button type="button" class="tool-card tool-card--entry" @click="openMcpForm">
+          <div class="tool-card__body tool-card__body--entry">
+            <el-icon class="tool-card__plus-icon"><Plus /></el-icon>
+            <span class="tool-card__entry-label">添加 MCP 服务</span>
+            <span class="tool-card__entry-hint">填连接配置，建完再启用</span>
+          </div>
+        </button>
+
         <button
           v-for="mcp in mcpList"
           :key="mcp.mcpServerId"
           type="button"
           class="tool-card"
           :class="{ 'tool-card--live': isBound(mcp.mcpServerId) }"
-          @click="toggleMcp(mcp)"
+          @click="openMcpDetail(mcp)"
         >
           <div class="tool-card__body">
             <div class="tool-card__row">
@@ -83,7 +91,7 @@
               </span>
               <div class="tool-card__text">
                 <span class="tool-card__title">{{ mcp.name }}</span>
-                <span class="tool-card__subtitle">{{ mcp.transport }} · {{ mcp.serverName }}</span>
+                <span class="tool-card__subtitle">{{ mcp.transport }} · {{ mcp.serverName || "未设标识" }}</span>
               </div>
               <span class="tool-card__status-dot" :class="isBound(mcp.mcpServerId) ? 'is-on' : 'is-off'" />
             </div>
@@ -91,7 +99,7 @@
         </button>
 
         <p v-if="!mcpList.length && !mcpLoading" class="tool-grid__empty">
-          平台还没有 MCP 服务，先到「MCP」页添加一个。
+          平台还没有 MCP 服务，点上方「添加 MCP 服务」新建一个。
         </p>
       </div>
     </section>
@@ -170,14 +178,105 @@
         <el-button round type="danger" plain :loading="persisting" @click="removeFromDetail">移除</el-button>
       </template>
     </el-dialog>
+
+    <!-- MCP 详情 -->
+    <el-dialog v-model="mcpDetailVisible" width="520px" destroy-on-close append-to-body class="tool-dialog">
+      <template #header>
+        <div class="tool-dialog-header">
+          <h2 class="tool-dialog-header__title">MCP 详情</h2>
+        </div>
+      </template>
+      <template v-if="detailMcp">
+        <div class="tool-detail-hero">
+          <span class="tool-detail-hero__icon tool-card__icon--mcp">
+            <el-icon><Connection /></el-icon>
+          </span>
+          <div>
+            <h3 class="tool-detail-hero__name">{{ detailMcp.name }}</h3>
+            <p class="tool-detail-hero__code">{{ detailMcp.serverName || detailMcp.mcpServerId }}</p>
+          </div>
+        </div>
+        <div class="tool-info-grid">
+          <div class="tool-info-grid__row">
+            <span class="tool-info-grid__label">传输方式</span>
+            <p class="tool-info-grid__value">{{ detailMcp.transport || "stdio" }}</p>
+          </div>
+          <div class="tool-info-grid__row">
+            <span class="tool-info-grid__label">连接配置</span>
+            <p class="tool-info-grid__value tool-info-grid__mono">{{ detailMcp.config || "未配置" }}</p>
+          </div>
+          <div class="tool-info-grid__row">
+            <span class="tool-info-grid__label">本场景</span>
+            <p class="tool-info-grid__value">{{ isBound(detailMcp.mcpServerId) ? "已启用" : "未启用" }}</p>
+          </div>
+        </div>
+      </template>
+      <template #footer>
+        <el-button round @click="mcpDetailVisible = false">关闭</el-button>
+        <el-button
+          round
+          type="primary"
+          plain
+          :loading="persisting"
+          @click="detailMcp && toggleMcp(detailMcp)"
+        >
+          {{ detailMcp && isBound(detailMcp.mcpServerId) ? "取消启用" : "启用于本场景" }}
+        </el-button>
+        <el-button round type="danger" plain :loading="persisting" @click="removeMcp">删除服务</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 新建 MCP 服务 -->
+    <el-dialog v-model="mcpFormVisible" width="560px" destroy-on-close append-to-body class="tool-dialog">
+      <template #header>
+        <div class="tool-dialog-header">
+          <h2 class="tool-dialog-header__title">添加 MCP 服务</h2>
+          <p class="tool-dialog-header__sub">平台级服务，建完在列表里启用于本场景</p>
+        </div>
+      </template>
+      <el-form label-position="top" @submit.prevent>
+        <el-form-item label="服务名称" required>
+          <el-input v-model="mcpForm.name" maxlength="64" placeholder="例如：内部工单查询" />
+        </el-form-item>
+        <el-form-item label="服务标识">
+          <el-input v-model="mcpForm.serverName" maxlength="64" placeholder="可选，MCP server name" />
+        </el-form-item>
+        <el-form-item label="传输方式">
+          <el-select v-model="mcpForm.transport" class="mcp-form__select">
+            <el-option label="websocket" value="websocket" />
+            <el-option label="sse" value="sse" />
+            <el-option label="stdio" value="stdio" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="连接配置（JSON）">
+          <el-input
+            v-model="mcpForm.config"
+            type="textarea"
+            :rows="6"
+            placeholder='{"url": "wss://example.com/mcp", "headers": {}}'
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="mcpFormVisible = false">取消</el-button>
+        <el-button type="primary" :loading="mcpSaving" @click="submitMcp">创建</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script lang="ts">
 import type { IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
 import { Connection, Plus, Search } from "@element-plus/icons-vue"
-import { ElMessage } from "element-plus"
-import { getAgentMcpServerListApi, getAgentToolListApi, getAiAssistantApi, saveAiAssistantApi } from "@/api/agent"
+import { ElMessage, ElMessageBox } from "element-plus"
+import {
+  createAgentMcpServerApi,
+  deleteAgentMcpServerApi,
+  getAgentMcpServerListApi,
+  getAgentToolListApi,
+  getAiAssistantApi,
+  saveAiAssistantApi
+} from "@/api/agent"
 import { iconLetter, iconTint } from "./cardVisual"
 import { parseIdList } from "./shared"
 
@@ -227,6 +326,13 @@ export default defineComponent({
     const plazaSearch = ref("")
     const detailVisible = ref(false)
     const detailItem = ref<IAgentToolInfo | null>(null)
+
+    // MCP 详情与新建
+    const mcpDetailVisible = ref(false)
+    const detailMcp = ref<IAgentMcpServerInfo | null>(null)
+    const mcpFormVisible = ref(false)
+    const mcpSaving = ref(false)
+    const mcpForm = reactive({ name: "", serverName: "", transport: "websocket", config: "" })
 
     const catalogMap = computed(() => {
       const m = new Map<string, IAgentToolInfo>()
@@ -337,6 +443,85 @@ export default defineComponent({
       if (ok) ElMessage.success(wasBound ? "已取消启用" : "已启用")
     }
 
+    function openMcpDetail(mcp: IAgentMcpServerInfo) {
+      detailMcp.value = mcp
+      mcpDetailVisible.value = true
+    }
+
+    async function removeMcp() {
+      const mcp = detailMcp.value
+      if (!mcp) return
+      try {
+        await ElMessageBox.confirm(
+          `删除「${mcp.name}」后所有场景都无法再使用该服务，确认删除？`,
+          "删除 MCP 服务",
+          { type: "warning", confirmButtonText: "确认删除", cancelButtonText: "取消" }
+        )
+      } catch {
+        return
+      }
+      persisting.value = true
+      try {
+        const res = await deleteAgentMcpServerApi({ mcpServerId: mcp.mcpServerId })
+        if (res.code !== 0) throw new Error(res.msg || "删除失败")
+        // 已绑定的话一并解绑，否则列表里会留下指向已删服务的死 ID
+        if (isBound(mcp.mcpServerId)) {
+          enabledMcpIds.value = enabledMcpIds.value.filter((id) => id !== mcp.mcpServerId)
+          const ok = await persist()
+          if (!ok) throw new Error("服务已删除，但解除绑定失败")
+        }
+        mcpList.value = mcpList.value.filter((item) => item.mcpServerId !== mcp.mcpServerId)
+        mcpDetailVisible.value = false
+        ElMessage.success("已删除")
+      } catch (err) {
+        ElMessage.error(err instanceof Error && err.message ? err.message : "删除失败")
+      } finally {
+        persisting.value = false
+      }
+    }
+
+    function openMcpForm() {
+      mcpForm.name = ""
+      mcpForm.serverName = ""
+      mcpForm.transport = "websocket"
+      mcpForm.config = ""
+      mcpFormVisible.value = true
+    }
+
+    async function submitMcp() {
+      const name = mcpForm.name.trim()
+      if (name.length < 2) {
+        ElMessage.warning("服务名称至少 2 个字符")
+        return
+      }
+      if (mcpForm.config.trim()) {
+        try {
+          JSON.parse(mcpForm.config)
+        } catch {
+          ElMessage.warning("连接配置必须是合法 JSON")
+          return
+        }
+      }
+      mcpSaving.value = true
+      try {
+        const res = await createAgentMcpServerApi({
+          name,
+          serverName: mcpForm.serverName.trim(),
+          transport: mcpForm.transport,
+          config: mcpForm.config.trim(),
+          status: 1
+        })
+        if (res.code !== 0) throw new Error(res.msg || "创建失败")
+        mcpFormVisible.value = false
+        ElMessage.success("MCP 服务已创建，可在列表中启用")
+        await loadMcp()
+      } catch (err) {
+        ElMessage.error(err instanceof Error && err.message ? err.message : "创建失败")
+      } finally {
+        mcpSaving.value = false
+      }
+    }
+
     onMounted(async () => {
       await Promise.all([loadCatalog(), loadMcp(), loadDetail()])
     })
@@ -360,6 +545,11 @@ export default defineComponent({
       detailVisible,
       detailItem,
       plazaFiltered,
+      mcpDetailVisible,
+      detailMcp,
+      mcpFormVisible,
+      mcpSaving,
+      mcpForm,
       iconLetter,
       iconTint,
       toolTypeLabel,
@@ -370,7 +560,11 @@ export default defineComponent({
       addFromPlaza,
       openToolDetail,
       removeFromDetail,
-      toggleMcp
+      toggleMcp,
+      openMcpDetail,
+      removeMcp,
+      openMcpForm,
+      submitMcp
     }
   }
 })
@@ -405,5 +599,9 @@ export default defineComponent({
   text-align: center;
   font-size: 13px;
   color: var(--el-text-color-secondary);
+}
+
+.mcp-form__select {
+  width: 200px;
 }
 </style>

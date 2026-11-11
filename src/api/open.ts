@@ -20,76 +20,50 @@
  */
 
 import type {
-  IAuditDeveloperReq,
-  IAuditDeveloperRes,
-  IApplyDeveloperReq,
-  IApplyDeveloperRes,
-  IAuditOpenAppReq,
-  IAuditOpenAppRes,
-  IGetDeveloperListReq,
-  IGetDeveloperListRes,
-  IGetOpenAppListReq,
-  IGetOpenAppListRes,
-  IGetOpenWebhookLogListReq,
-  IGetOpenWebhookLogListRes,
-  IUpdateOpenAppStatusReq,
-  IUpdateOpenAppStatusRes
+  IGetOpenBotListReq,
+  IGetOpenBotListRes,
+  IGetOpenOAuthListReq,
+  IGetOpenOAuthListRes,
+  IUpdateOpenBotStatusReq,
+  IUpdateOpenBotStatusRes,
+  IUpdateOpenOAuthStatusReq,
+  IUpdateOpenOAuthStatusRes
 } from "@/types/api/open"
 import config from "@/config/env"
 import { ajax } from "@/utils/request"
 
-export function getDeveloperListApi(params: IGetDeveloperListReq) {
-  return ajax<IGetDeveloperListRes>({
+// ==================== OAuth 应用 ====================
+
+export function getOpenOAuthListApi(params: IGetOpenOAuthListReq) {
+  return ajax<IGetOpenOAuthListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/open/v1/developer_list`,
+    url: `${config.baseAPI}/admin/backend/open/v1/oauth_list`,
     params
   })
 }
 
-export function auditDeveloperApi(data: IAuditDeveloperReq) {
-  return ajax<IAuditDeveloperRes>({
+export function updateOpenOAuthStatusApi(data: IUpdateOpenOAuthStatusReq) {
+  return ajax<IUpdateOpenOAuthStatusRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/developer_audit`,
+    url: `${config.baseAPI}/admin/backend/open/v1/oauth_update_status`,
     data
   })
 }
 
-export function applyDeveloperApi(data: IApplyDeveloperReq) {
-  return ajax<IApplyDeveloperRes>({
-    method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/developer_apply`,
-    data
-  })
-}
+// ==================== 推送机器人 ====================
 
-export function getOpenAppListApi(params: IGetOpenAppListReq) {
-  return ajax<IGetOpenAppListRes>({
+export function getOpenBotListApi(params: IGetOpenBotListReq) {
+  return ajax<IGetOpenBotListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/open/v1/app_list`,
+    url: `${config.baseAPI}/admin/backend/open/v1/bot_list`,
     params
   })
 }
 
-export function auditOpenAppApi(data: IAuditOpenAppReq) {
-  return ajax<IAuditOpenAppRes>({
+export function updateOpenBotStatusApi(data: IUpdateOpenBotStatusReq) {
+  return ajax<IUpdateOpenBotStatusRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/app_audit`,
+    url: `${config.baseAPI}/admin/backend/open/v1/bot_update_status`,
     data
-  })
-}
-
-export function updateOpenAppStatusApi(data: IUpdateOpenAppStatusReq) {
-  return ajax<IUpdateOpenAppStatusRes>({
-    method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/app_update_status`,
-    data
-  })
-}
-
-export function getOpenWebhookLogListApi(params: IGetOpenWebhookLogListReq) {
-  return ajax<IGetOpenWebhookLogListRes>({
-    method: "GET",
-    url: `${config.baseAPI}/admin/backend/open/v1/webhook_list_logs`,
-    params
   })
 }

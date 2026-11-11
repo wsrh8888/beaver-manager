@@ -38,8 +38,7 @@ import {
   Coin,
   TrendCharts,
   Upload,
-  User,
-  UserFilled
+  User
 } from "@element-plus/icons-vue"
 
 export interface MenuItem {
@@ -82,10 +81,9 @@ export const menuConfig: MenuItem[] = [
     title: "产品与开放",
     icon: Platform,
     children: [
-      { path: "/open/developers", title: "开发者", icon: UserFilled },
-      { path: "/open/apps", title: "开放应用", icon: Platform },
+      { path: "/open/oauth", title: "OAuth 应用", icon: Lock },
+      { path: "/open/bots", title: "推送机器人", icon: Connection },
       { path: "/open/workbench", title: "工作台应用", icon: Grid },
-      { path: "/open/integrations", title: "机器人集成", icon: Connection },
       { path: "/open/digitals", title: "用户数字伙伴", icon: Avatar }
     ]
   },

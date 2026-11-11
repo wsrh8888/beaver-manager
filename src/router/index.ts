@@ -96,24 +96,19 @@ const router = createRouter({
           path: "open",
           children: [
             {
-              path: "developers",
-              name: "开发者",
-              component: () => import("@/pages/open/developers/index.vue")
+              path: "oauth",
+              name: "OAuth 应用",
+              component: () => import("@/pages/open/oauth/index.vue")
             },
             {
-              path: "apps",
-              name: "开放应用",
-              component: () => import("@/pages/open/apps/index.vue")
+              path: "bots",
+              name: "推送机器人",
+              component: () => import("@/pages/open/bots/index.vue")
             },
             {
               path: "workbench",
               name: "工作台应用",
               component: () => import("@/pages/open/workbench/index.vue")
-            },
-            {
-              path: "integrations",
-              name: "机器人集成",
-              component: () => import("@/pages/open/integrations/index.vue")
             },
             {
               path: "digitals",

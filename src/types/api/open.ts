@@ -19,235 +19,101 @@
  * beaver-manager-header-v1
  */
 
-// 开放平台相关类型定义
+// 开放平台（open 域）管理端类型：OAuth 应用 + 推送机器人。
+// 两者都由开发者在控制台自助创建，后台只做检索与启停。
 
-export interface OpenApp {
-  appId: string
-  name: string
-  description: string
-  status: number // 0-禁用 1-启用
-  webhookUrl: string
-  createdAt: number
-  appSecret?: string // 仅创建时返回
-  botUserId?: string // 仅创建时返回
-}
+// ==================== OAuth 应用（open_oauth）====================
 
-export interface OpenAppListQuery {
-  page: number
-  pageSize: number
-  status?: number
-  keyword?: string
-}
-
-export interface WebhookConfig {
-  configId: string
-  appId: string
-  eventType: string
-  targetUrl: string
-  secret: string
-  retryCount: number
-  timeout: number
-  status: number
-  createdAt: number
-}
-
-export interface WebhookLog {
-  id: string
-  appId: string
-  eventType: string
-  payload: string
-  responseCode: number
-  responseBody: string
-  retryCount: number
-  status: number // 0-失败 1-成功
-  createdAt: number
-}
-
-export interface ApiCallStats {
-  totalCalls: number
-  successCalls: number
-  failedCalls: number
-  avgResponseTime: number
-  trend: Array<{
-    time: string
-    calls: number
-    success: number
-    failed: number
-  }>
-}
-
-export interface WebhookStats {
-  totalEvents: number
-  successEvents: number
-  failedEvents: number
-  avgDeliveryTime: number
-  trend: Array<{
-    time: string
-    events: number
-    success: number
-    failed: number
-  }>
-}
-
-// ==================== 管理后台 - 开放平台 ====================
-
-export interface IDeveloperInfo {
-  id: string
-  userId: string
-  realName: string
-  companyName: string
-  phone: string
-  email: string
-  description: string
-  status: number
-  auditBy: string
-  auditTime: number
-  auditRemark: string
-  createdAt: number
-}
-
-export interface IGetDeveloperListReq {
-  page?: number
-  pageSize?: number
-  status?: number
-}
-
-export interface IGetDeveloperListRes {
-  total: number
-  list: IDeveloperInfo[]
-}
-
-export interface IAuditDeveloperReq {
-  id: string
-  status: number
-  auditRemark?: string
-}
-
-export interface IAuditDeveloperRes {}
-
-export interface IApplyDeveloperReq {
-  applicantUserId?: string
-  realName: string
-  companyName?: string
-  phone: string
-  email: string
-  description?: string
-}
-
-export interface IApplyDeveloperRes {
-  id: string
-}
-
-export interface IOpenAppInfo {
-  appId: string
+export interface IOpenOAuthInfo {
+  oauthId: string
   name: string
   description: string
   icon: string
   ownerUserId: string
   ownerUserName: string
-  appType: number
-  category: string
+  /** 0 禁用 1 启用 */
   status: number
-  auditStatus: number
-  auditedBy: string
-  auditedAt: number
-  enableRobot: number
-  enableOAuth: number
-  enableWebhook: number
   createdAt: number
 }
 
-export interface IGetOpenAppListReq {
+export interface IGetOpenOAuthListReq {
   page?: number
   pageSize?: number
+  /** 应用名 / 描述 */
   keyword?: string
   ownerUserId?: string
-  appId?: string
+  oauthId?: string
+  /** -1 全部 0 禁用 1 启用 */
   status?: number
-  auditStatus?: number
-  /** 0全部 1Robot 2Webhook 3Robot或Webhook */
-  capabilityType?: number
 }
 
-export interface IGetOpenAppListRes {
+export interface IGetOpenOAuthListRes {
   total: number
-  list: IOpenAppInfo[]
+  list: IOpenOAuthInfo[]
 }
 
-export interface IAuditOpenAppReq {
-  appId: string
+export interface IUpdateOpenOAuthStatusReq {
+  oauthIds: string[]
+  /** 0 禁用 1 启用 */
   status: number
-  auditRemark?: string
 }
 
-export interface IAuditOpenAppRes {}
-
-export interface IUpdateOpenAppStatusReq {
-  appIds: string[]
-  action: number
+export interface IUpdateOpenOAuthStatusRes {
+  affectedCount: number
 }
 
-export interface IUpdateOpenAppStatusRes {}
+// ==================== 推送机器人（open_bot）====================
 
-export interface IOpenWebhookLogInfo {
-  id: number
-  appId: string
-  eventId: string
-  eventType: string
-  targetUrl: string
-  httpStatus: number
-  latencyMs: number
-  retryCount: number
+export interface IOpenBotInfo {
+  /** Bot 的 IM 用户 ID */
+  botId: string
+  /** Bot 的 IM 昵称 */
+  botName: string
+  ownerId: string
+  ownerUserName: string
+  /** private | partial | public */
+  visibility: string
+  /** 0 禁用 1 启用 */
   status: number
-  errorMessage: string
+  /** 1 开启入站签名校验 */
+  signatureEnabled: number
   createdAt: number
 }
 
-export interface IGetOpenWebhookLogListReq {
+export interface IGetOpenBotListReq {
   page?: number
   pageSize?: number
-  appId?: string
-  eventType?: string
-  /** 0全部 1成功 2失败 */
+  /** BotID 模糊匹配 */
+  keyword?: string
+  ownerUserId?: string
+  /** -1 全部 0 禁用 1 启用 */
   status?: number
 }
 
-export interface IGetOpenWebhookLogListRes {
+export interface IGetOpenBotListRes {
   total: number
-  list: IOpenWebhookLogInfo[]
+  list: IOpenBotInfo[]
 }
 
-/** Webhook 投递状态 */
-export const OPEN_WEBHOOK_LOG_STATUS: Record<number, { text: string; type: string }> = {
-  0: { text: "失败", type: "danger" },
-  1: { text: "成功", type: "success" }
+export interface IUpdateOpenBotStatusReq {
+  botId: string
+  /** 0 禁用 1 启用 */
+  status: number
 }
 
-/** 能力筛选（admin API） */
-export const OPEN_CAPABILITY_TYPE = {
-  ALL: 0,
-  ROBOT: 1,
-  WEBHOOK: 2,
-  ROBOT_OR_WEBHOOK: 3
-} as const
+export interface IUpdateOpenBotStatusRes {}
 
-/** 应用状态（与 open_rpc 返回值一致：0草稿 1已发布 2禁用） */
-export const OPEN_APP_STATUS: Record<number, { text: string; type: string }> = {
-  0: { text: "草稿", type: "info" },
-  1: { text: "已发布", type: "success" },
-  2: { text: "已禁用", type: "danger" }
+// ==================== 枚举文案 ====================
+
+/** 启用状态（OAuth 应用与推送机器人共用：0 禁用 1 启用） */
+export const OPEN_ENABLE_STATUS: Record<number, { text: string; type: string }> = {
+  0: { text: "禁用", type: "info" },
+  1: { text: "启用", type: "success" }
 }
 
-/** 审核状态（0待审核 1已通过 2已拒绝） */
-export const OPEN_AUDIT_STATUS: Record<number, { text: string; type: string }> = {
-  0: { text: "待审核", type: "warning" },
-  1: { text: "已通过", type: "success" },
-  2: { text: "已拒绝", type: "danger" }
+/** 机器人可见范围 */
+export const OPEN_BOT_VISIBILITY: Record<string, string> = {
+  private: "仅创建者",
+  partial: "指定成员",
+  public: "全部用户"
 }
-
-/** 列表筛选入参（admin API：1草稿 2已发布 3禁用） */
-export const OPEN_APP_STATUS_FILTER = {
-  DRAFT: 1,
-  PUBLISHED: 2,
-  DISABLED: 3
-} as const

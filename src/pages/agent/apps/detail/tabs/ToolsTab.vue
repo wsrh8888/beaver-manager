@@ -323,10 +323,12 @@ export default defineComponent({
     const enabledSet = computed(() => new Set(enabledIds.value))
     const enabledMcpSet = computed(() => new Set(enabledMcpIds.value))
 
+    // 广场只上架启用中的技能；已停用的仍留在「工具箱」里，方便看清绑了什么
     const plazaFiltered = computed(() => {
+      const live = catalog.value.filter((item) => item.status === 1)
       const q = plazaSearch.value.trim().toLowerCase()
-      if (!q) return catalog.value
-      return catalog.value.filter(
+      if (!q) return live
+      return live.filter(
         (item) =>
           item.name.toLowerCase().includes(q) ||
           (item.description || "").toLowerCase().includes(q) ||

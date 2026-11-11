@@ -25,14 +25,6 @@ export interface IPromptVariable {
   required: boolean
 }
 
-export function emptyVar(): IPromptVariable {
-  return { key: "", label: "", type: "text", options: [], defaultValue: "", required: false }
-}
-
-export function varTypeLabel(t: string) {
-  return { text: "单行文本", paragraph: "段落", select: "下拉", number: "数字" }[t] || t
-}
-
 export function parseIdList(raw: string): string[] {
   if (!raw || raw.trim().charAt(0) !== "[") return []
   try {
@@ -87,10 +79,6 @@ export function parseVars(raw: string): IPromptVariable[] {
     /* ignore */
   }
   return []
-}
-
-export function stringifyVars(vars: IPromptVariable[]) {
-  return JSON.stringify(vars)
 }
 
 export function parseOpeningQuestions(raw: string): string[] {

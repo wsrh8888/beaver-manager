@@ -4,44 +4,42 @@
   Project: beaver-manager
   https://github.com/wsrh8888/beaver-manager
 
-  智能体详情二级页面：编排 / 工具 / 知识 / 设置 四个 Tab
+  场景智能体详情：编排 / 知识源 / 工具 / 设置 四个分区。
+  场景是平台固定枚举，这里只配置、不创建，也没有开发者选项（那是开放平台数字伙伴的事）。
+  分区与 URL ?tab= 双向同步，刷新、分享、后退都停在同一分区。
 -->
 
 <template>
   <div class="app-detail">
-    <div class="app-detail__header">
-      <el-button link type="primary" @click="goBack">
-        <el-icon><ArrowLeft /></el-icon>
-        返回列表
-      </el-button>
-      <div class="app-detail__title-block">
-        <span class="app-detail__title">{{ sceneLabel }}</span>
-        <span class="app-detail__subtitle">场景：{{ scene }}</span>
-      </div>
-    </div>
+    <header class="app-detail__head">
+      <button class="app-detail__back" type="button" @click="goBack">
+        <el-icon><ArrowLeft /></el-icon>返回列表
+      </button>
 
-    <el-tabs v-model="activeTab" class="app-detail__tabs">
-      <el-tab-pane label="编排" name="persona" lazy>
-        <PersonaTab :scene="scene" />
-      </el-tab-pane>
-      <el-tab-pane label="工具" name="tools" lazy>
-        <ToolsTab :scene="scene" />
-      </el-tab-pane>
-      <el-tab-pane label="知识" name="knowledge" lazy>
-        <KnowledgeTab :scene="scene" />
-      </el-tab-pane>
-      <el-tab-pane label="设置" name="settings" lazy>
-        <SettingsTab :scene="scene" />
-      </el-tab-pane>
-    </el-tabs>
+      <div class="app-detail__title-row">
+        <h1 class="app-detail__title">{{ sceneLabel }}</h1>
+        <span class="app-detail__scene">{{ scene }}</span>
+      </div>
+    </header>
+
+    <TabNav :tabs="TABS" :active="active" @select="select" />
+
+    <!-- :key 随场景变化，强制重建分区，避免切场景时残留上一个场景的表单状态 -->
+    <div :key="scene">
+      <OrchestrationTab v-if="active === 'orchestration'" :scene="scene" />
+      <KnowledgeTab v-else-if="active === 'knowledge'" :scene="scene" />
+      <ToolsTab v-else-if="active === 'tools'" :scene="scene" />
+      <SettingsTab v-else-if="active === 'settings'" :scene="scene" />
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { ArrowLeft } from "@element-plus/icons-vue"
 import { useRoute, useRouter } from "vue-router"
+import TabNav from "../components/TabNav.vue"
+import OrchestrationTab from "./tabs/OrchestrationTab.vue"
 import KnowledgeTab from "./tabs/KnowledgeTab.vue"
-import PersonaTab from "./tabs/PersonaTab.vue"
 import SettingsTab from "./tabs/SettingsTab.vue"
 import ToolsTab from "./tabs/ToolsTab.vue"
 
@@ -52,53 +50,86 @@ const SCENE_LABELS: Record<string, string> = {
   workbench: "工作台"
 }
 
+const TABS = [
+  { key: "orchestration", label: "编排" },
+  { key: "knowledge", label: "知识源" },
+  { key: "tools", label: "工具" },
+  { key: "settings", label: "设置" }
+]
+
 export default defineComponent({
   name: "AgentAppDetail",
-  components: { ArrowLeft, PersonaTab, ToolsTab, KnowledgeTab, SettingsTab },
+  components: { ArrowLeft, TabNav, OrchestrationTab, ToolsTab, KnowledgeTab, SettingsTab },
   setup() {
     const route = useRoute()
     const router = useRouter()
+
     const scene = computed(() => String(route.query.scene || "assistant"))
-    const activeTab = ref("persona")
     const sceneLabel = computed(() => SCENE_LABELS[scene.value] || scene.value)
+
+    const active = computed(() => {
+      const queryTab = String(route.query.tab || "")
+      return TABS.some(item => item.key === queryTab) ? queryTab : TABS[0].key
+    })
+
+    const select = (key: string) => {
+      if (key === active.value) return
+      router.replace({ query: { ...route.query, tab: key } })
+    }
 
     const goBack = () => router.push("/agent/apps")
 
-    return { scene, activeTab, sceneLabel, goBack }
+    return { scene, sceneLabel, active, select, goBack, TABS }
   }
 })
 </script>
 
 <style lang="less" scoped>
 .app-detail {
-  padding: 16px;
-
-  &__header {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    margin-bottom: 8px;
+  &__head {
+    margin-bottom: 12px;
   }
 
-  &__title-block {
-    display: flex;
-    flex-direction: column;
+  &__back {
+    display: inline-flex;
+    align-items: center;
     gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--el-text-color-secondary);
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--el-color-primary);
+    }
+  }
+
+  &__title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
   }
 
   &__title {
-    font-size: 18px;
+    margin: 0;
+    font-size: 20px;
     font-weight: 600;
-    color: var(--el-text-color-primary, #303133);
+    line-height: 1.4;
+    color: var(--el-text-color-primary);
   }
 
-  &__subtitle {
-    font-size: 12px;
-    color: #909399;
-  }
-
-  &__tabs {
-    margin-top: 8px;
+  &__scene {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--el-fill-color);
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 18px;
+    color: var(--el-text-color-secondary);
   }
 }
 </style>

@@ -12,7 +12,7 @@
         :class="{ 'agent-tools__nav-btn--active': viewMode === 'toolbox' }"
         @click="viewMode = 'toolbox'"
       >
-        工具箱
+        工具箱<span class="agent-tools__nav-count">{{ enabledIds.length }}</span>
       </button>
       <button
         type="button"
@@ -21,7 +21,7 @@
         :class="{ 'agent-tools__nav-btn--active': viewMode === 'mcp' }"
         @click="viewMode = 'mcp'"
       >
-        MCP
+        MCP<span class="agent-tools__nav-count">{{ enabledMcpIds.length }}</span>
       </button>
     </nav>
 
@@ -58,6 +58,10 @@
             </p>
           </div>
         </button>
+
+        <p v-if="!enabledTools.length && !catalogLoading" class="tool-grid__empty">
+          还没有启用工具，点上方「工具广场」挑几个。
+        </p>
       </div>
     </section>
 
@@ -86,7 +90,9 @@
           </div>
         </button>
 
-        <el-empty v-if="!mcpList.length && !mcpLoading" description="暂无 MCP 服务，请到 MCP 服务页添加" :image-size="60" />
+        <p v-if="!mcpList.length && !mcpLoading" class="tool-grid__empty">
+          平台还没有 MCP 服务，先到「MCP」页添加一个。
+        </p>
       </div>
     </section>
 
@@ -347,6 +353,8 @@ export default defineComponent({
       catalog,
       mcpList,
       enabledTools,
+      enabledIds,
+      enabledMcpIds,
       plazaVisible,
       plazaSearch,
       detailVisible,
@@ -370,4 +378,32 @@ export default defineComponent({
 
 <style lang="less" scoped>
 @import "./toolUi.less";
+
+.agent-tools__nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: var(--el-fill-color);
+  color: var(--el-text-color-secondary);
+}
+
+.agent-tools__nav-btn--active .agent-tools__nav-count {
+  background: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.tool-grid__empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 28px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--el-text-color-secondary);
+}
 </style>

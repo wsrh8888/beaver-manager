@@ -4,69 +4,71 @@
   Project: beaver-manager
   https://github.com/wsrh8888/beaver-manager
 
-  场景智能体列表页：卡片网格，点击卡片进入详情二级页面
+  场景智能体列表页。
+  场景是平台固定枚举（assistant / chat / moment / workbench），每个场景对应一个智能体配置，
+  所以这里没有「创建」入口，也不做分页——点卡片进详情，在四个分区里配置。
 -->
 
 <template>
   <div class="agent-apps" v-loading="loading">
-    <div class="agent-apps__header">
-      <div class="agent-apps__header-left">
-        <h2 class="agent-apps__title">场景智能体</h2>
-        <p class="agent-apps__hint">每个场景对应一个智能体，点击卡片进入配置页面。</p>
-      </div>
-      <div class="agent-apps__header-actions">
-        <el-button @click="loadAll">刷新</el-button>
-      </div>
-    </div>
+    <header class="agent-apps__header">
+      <h2 class="agent-apps__title">场景智能体</h2>
+      <p class="agent-apps__hint">每个场景固定对应一个智能体，点卡片进入配置。</p>
+    </header>
 
-    <div v-if="cards.length" class="agent-grid">
-      <div v-for="card in cards" :key="card.scene" class="agent-card" @click="openDetail(card)">
-        <div class="agent-card__top">
-          <div class="agent-card__title-row">
-            <span class="agent-card__name">{{ card.name }}</span>
-            <el-tag size="small" effect="light" :type="card.status === 1 ? 'success' : 'info'">
-              {{ card.status === 1 ? "启用" : "停用" }}
-            </el-tag>
+    <div class="agent-grid">
+      <article
+        v-for="card in cards"
+        :key="card.scene"
+        class="agent-card"
+        role="button"
+        tabindex="0"
+        @click="openDetail(card)"
+        @keyup.enter="openDetail(card)"
+      >
+        <header class="agent-card__head">
+          <span class="agent-card__avatar" :style="{ background: iconTint(card.name) }">
+            {{ iconLetter(card.name) }}
+          </span>
+          <div class="agent-card__heading">
+            <h3 class="agent-card__name" :title="card.name">{{ card.name }}</h3>
+            <p class="agent-card__meta">
+              {{ card.scene }}
+              <template v-if="card.modelName"> · {{ card.modelName }}</template>
+              <template v-if="card.generationStyle"> · {{ card.generationStyle }}</template>
+            </p>
           </div>
-          <div class="agent-card__meta">
-            <span>{{ sceneLabel(card.scene) }}</span>
-            <span v-if="card.modelName">· {{ card.modelName }}</span>
-            <el-tag v-if="card.generationStyle" size="small" type="warning" effect="plain">
-              {{ card.generationStyle }}
-            </el-tag>
-          </div>
-        </div>
-        <p class="agent-card__desc">
-          {{ card.systemPrompt || "暂无系统提示词" }}
-        </p>
-        <div class="agent-card__stats">
-          <span>知识 {{ card.knowledgeCount }}</span>
-          <span>工具 {{ card.toolCount }}</span>
-          <span>MCP {{ card.mcpCount }}</span>
-          <span>变量 {{ card.varCount }}</span>
-        </div>
-        <div class="agent-card__foot">
-          <span class="agent-card__time">{{ card.openingMessage ? "已配开场白" : "未配开场白" }}</span>
-          <span class="agent-card__id">{{ card.scene }}</span>
-        </div>
-      </div>
-    </div>
+          <span class="agent-card__badge" :class="card.status === 1 ? 'is-on' : 'is-off'">
+            {{ card.status === 1 ? "启用中" : "已停用" }}
+          </span>
+        </header>
 
-    <el-empty v-else description="暂无场景智能体" :image-size="80" />
+        <p class="agent-card__desc">{{ card.systemPrompt || "还没有配置系统提示词" }}</p>
+
+        <footer class="agent-card__stats">
+          <span class="agent-card__stat"><b>{{ card.toolCount }}</b> 工具</span>
+          <span class="agent-card__stat"><b>{{ card.knowledgeCount }}</b> 知识库</span>
+          <span class="agent-card__stat"><b>{{ card.mcpCount }}</b> MCP</span>
+          <span class="agent-card__stat"><b>{{ card.varCount }}</b> 变量</span>
+          <el-icon class="agent-card__go"><Right /></el-icon>
+        </footer>
+      </article>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import type { IAgentAppInfo, IAgentModelInfo } from "@/types/api/agent"
+import { Right } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
 import { getAgentAppListApi, getAgentModelListApi, getAiAssistantApi } from "@/api/agent"
+import { iconLetter, iconTint } from "./detail/tabs/cardVisual"
 import { parseIdList, parseModelParams, parseVars, styleFromParams } from "./detail/tabs/shared"
 
 interface ISceneCard {
   scene: string
   name: string
   systemPrompt: string
-  openingMessage: string
   status: number
   modelName: string
   generationStyle: string
@@ -85,11 +87,9 @@ const SCENE_LABELS: Record<string, string> = {
 }
 const STYLE_LABELS: Record<string, string> = { stable: "更稳定", balanced: "默认", creative: "更发散" }
 
-function sceneLabel(scene: string) {
-  return SCENE_LABELS[scene] || scene
-}
-
 export default defineComponent({
+  name: "AgentAppsListPage",
+  components: { Right },
   setup() {
     const router = useRouter()
     const loading = ref(false)
@@ -124,7 +124,6 @@ export default defineComponent({
             scene,
             name: assistant?.name || SCENE_LABELS[scene],
             systemPrompt: assistant?.systemPrompt || app?.systemPrompt || "",
-            openingMessage: assistant?.openingMessage || app?.openingMessage || "",
             status: assistant?.status || app?.status || 1,
             modelName: modelNameOf(assistant?.llmModelId || app?.llmModelId || ""),
             generationStyle: STYLE_LABELS[style] || "",
@@ -139,92 +138,139 @@ export default defineComponent({
       }
     }
 
+    /** 分区走 ?tab=，与详情页的 TabNav 同一套约定 */
     const openDetail = (card: ISceneCard) => {
-      router.push({ path: "/agent/apps/detail", query: { scene: card.scene } })
+      router.push({ path: "/agent/apps/detail", query: { scene: card.scene, tab: "orchestration" } })
     }
 
     onMounted(loadAll)
 
-    return { loading, cards, sceneLabel, loadAll, openDetail }
+    return { loading, cards, iconLetter, iconTint, openDetail }
   }
 })
 </script>
 
 <style lang="less" scoped>
 .agent-apps {
-  padding: 20px;
-
   &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     margin-bottom: 16px;
   }
 
   &__title {
-    margin: 0 0 4px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
   }
 
   &__hint {
-    margin: 0;
-    color: #909399;
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--el-text-color-secondary);
   }
 }
 
-/* 卡片网格：约束对齐 veriweb agent-card */
 .agent-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(288px, 1fr));
+  gap: 16px;
+  align-content: start;
+  min-height: 160px;
 }
 
 .agent-card {
-  padding: 14px 16px;
-  border: 1px solid #ebeef5;
-  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 0;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
   cursor: pointer;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
-  background: #fff;
 
-  &:hover {
-    border-color: #c6d5ff;
-    box-shadow: 0 4px 14px rgb(22 100 255 / 10%);
+  &:hover,
+  &:focus-visible {
+    border-color: var(--el-color-primary-light-5);
+    box-shadow: 0 6px 18px rgb(15 23 42 / 8%);
+    outline: none;
+
+    .agent-card__go {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
-  &__title-row {
+  &__head {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--el-text-color-primary);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 65%);
+  }
+
+  &__heading {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   &__name {
-    flex: 1;
+    margin: 0;
     font-size: 15px;
     font-weight: 600;
-    color: #303133;
+    line-height: 22px;
+    color: var(--el-text-color-primary);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__meta {
-    margin-top: 6px;
+    margin: 2px 0 0;
     font-size: 12px;
-    color: #909399;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
+    color: var(--el-text-color-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    flex: 0 0 auto;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 18px;
+
+    &.is-on {
+      color: var(--el-color-success);
+      background: var(--el-color-success-light-9);
+    }
+
+    &.is-off {
+      color: var(--el-text-color-secondary);
+      background: var(--el-fill-color);
+    }
   }
 
   &__desc {
-    margin: 10px 0 0;
+    margin: 12px 0 16px;
     font-size: 13px;
-    line-height: 1.55;
-    color: #606266;
-    min-height: 40px;
+    line-height: 1.6;
+    color: var(--el-text-color-regular);
+    min-height: 42px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -232,28 +278,40 @@ export default defineComponent({
   }
 
   &__stats {
+    margin-top: auto;
     display: flex;
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 10px;
-    border-top: 1px solid #f0f2f5;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--el-border-color-extra-light);
     font-size: 12px;
-    color: #606266;
+    color: var(--el-text-color-secondary);
+
+    b {
+      font-weight: 600;
+      color: var(--el-text-color-primary);
+    }
   }
 
-  &__foot {
-    margin-top: 8px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: #c0c4cc;
-  }
-
-  &__id {
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  &__stat {
     white-space: nowrap;
+  }
+
+  &__go {
+    margin-left: auto;
+    font-size: 14px;
+    color: var(--el-color-primary);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 0.2s,
+      transform 0.2s;
+  }
+}
+
+@media (max-width: 767px) {
+  .agent-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>

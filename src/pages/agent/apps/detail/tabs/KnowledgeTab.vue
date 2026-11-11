@@ -1,48 +1,63 @@
 <!--
-  知识 Tab：知识库卡片网格 + 添加弹窗
+  Copyright (c) 2024-2026 Beaver IM Team
+  SPDX-License-Identifier: MIT
+  Project: beaver-manager
+  https://github.com/wsrh8888/beaver-manager
+
+  知识源分区：给当前场景挂载可检索的知识库集合。
+  场景智能体只存集合 ID（knowledgeIds），名称与类型实时取平台目录，不在这一层复制。
 -->
 
 <template>
-  <div class="agent-tools knowledge-tab">
-    <section v-loading="listLoading || detailLoading" class="agent-tools__panel">
-      <div class="tool-grid">
-        <button type="button" class="tool-card tool-card--entry" @click="openPlaza">
-          <div class="tool-card__body tool-card__body--entry">
-            <el-icon class="tool-card__plus-icon"><Plus /></el-icon>
-            <span class="tool-card__entry-label">添加知识库</span>
-            <span class="tool-card__entry-hint">关联知识库供智能体检索</span>
-          </div>
-        </button>
+  <div>
+    <div class="ks-head">
+      <h3 class="ks-head__title">知识源</h3>
+      <el-button type="primary" :icon="Plus" @click="openPlaza">添加知识库</el-button>
+    </div>
 
-        <button
-          v-for="item in enabledCollections"
-          :key="item.collectionId"
-          type="button"
-          class="tool-card"
-          @click="openDetail(item)"
-        >
-          <div class="tool-card__body">
-            <div class="tool-card__row">
-              <span class="tool-card__icon" :style="{ background: iconTint(item.name) }">
-                {{ iconLetter(item.name) }}
-              </span>
-              <div class="tool-card__text">
-                <span class="tool-card__title">{{ item.name }}</span>
-                <span class="tool-card__subtitle">{{ kindLabel(item.kind) }}</span>
-              </div>
+    <div v-loading="listLoading || detailLoading" class="agent-tools knowledge-tab">
+      <section class="agent-tools__panel">
+        <div class="tool-grid">
+          <button type="button" class="tool-card tool-card--entry" @click="openPlaza">
+            <div class="tool-card__body tool-card__body--entry">
+              <el-icon class="tool-card__plus-icon"><Plus /></el-icon>
+              <span class="tool-card__entry-label">添加知识库</span>
+              <span class="tool-card__entry-hint">关联知识库供智能体检索</span>
             </div>
-            <p class="tool-card__desc">
-              {{ item.description || "暂无描述" }}
-            </p>
-          </div>
-        </button>
-      </div>
+          </button>
 
-      <el-empty v-if="!enabledCollections.length && !listLoading" description="尚未关联知识库，点击上方添加" :image-size="60" />
-    </section>
+          <button
+            v-for="item in enabledCollections"
+            :key="item.collectionId"
+            type="button"
+            class="tool-card"
+            @click="openDetail(item)"
+          >
+            <div class="tool-card__body">
+              <div class="tool-card__row">
+                <span class="tool-card__icon" :style="{ background: iconTint(item.name) }">
+                  {{ iconLetter(item.name) }}
+                </span>
+                <div class="tool-card__text">
+                  <span class="tool-card__title">{{ item.name }}</span>
+                  <span class="tool-card__subtitle">{{ kindLabel(item.kind) }}</span>
+                </div>
+              </div>
+              <p class="tool-card__desc">
+                {{ item.description || "暂无描述" }}
+              </p>
+            </div>
+            <div class="tool-card__foot ks-foot">
+              <span class="tool-card__tag">知识库</span>
+              <span class="ks-foot__action">管理 →</span>
+            </div>
+          </button>
+        </div>
+      </section>
+    </div>
 
     <!-- 添加知识库弹窗 -->
-    <el-dialog v-model="plazaVisible" width="760px" destroy-on-close class="tool-dialog" :show-close="true">
+    <el-dialog v-model="plazaVisible" width="760px" destroy-on-close append-to-body class="tool-dialog" :show-close="true">
       <template #header>
         <div class="tool-dialog-header">
           <h2 class="tool-dialog-header__title">添加知识库</h2>
@@ -83,7 +98,7 @@
     </el-dialog>
 
     <!-- 知识库详情弹窗 -->
-    <el-dialog v-model="detailVisible" width="480px" destroy-on-close class="tool-dialog">
+    <el-dialog v-model="detailVisible" width="480px" destroy-on-close append-to-body class="tool-dialog">
       <template #header>
         <div class="tool-dialog-header">
           <h2 class="tool-dialog-header__title">知识库详情</h2>
@@ -139,8 +154,30 @@ function kindLabel(k: string) {
   return KIND_LABELS[k] || k
 }
 
+/** agent_app 记录还不存在时，补建成功后用它占位，避免下次改动又打一次 create */
+function emptyApp(scene: string): IAgentAppInfo {
+  return {
+    appId: "",
+    name: scene,
+    scene,
+    systemPrompt: "",
+    llmModelId: "",
+    modelParams: "",
+    tools: "",
+    mcpServerIds: "",
+    knowledgeIds: "",
+    openingMessage: "",
+    openingQuestions: "",
+    variables: "",
+    status: 1,
+    sort: 0,
+    createdBy: ""
+  }
+}
+
 export default defineComponent({
   name: "KnowledgeTab",
+  components: { Plus },
   props: {
     scene: { type: String, required: true }
   },
@@ -232,9 +269,9 @@ export default defineComponent({
         ElMessage.error(res.msg || "保存失败")
         return false
       }
-      // 更新 currentApp 以便后续 update 走对分支
+      // 新建后记住 appId，后续 update 才不会又去打 create
       if (!app && res.result?.appId) {
-        currentApp.value = { ...currentApp.value!, appId: res.result.appId }
+        currentApp.value = { ...emptyApp(props.scene), appId: res.result.appId, knowledgeIds }
       }
       return true
     }
@@ -299,4 +336,30 @@ export default defineComponent({
 
 <style lang="less" scoped>
 @import "./toolUi.less";
+
+.ks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  &__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+  }
+}
+
+.ks-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__action {
+    font-size: 12px;
+    color: var(--el-color-primary);
+  }
+}
 </style>

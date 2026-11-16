@@ -19,16 +19,13 @@
  * beaver-manager-header-v1
  */
 
+// scene ↔ agent_id 绑定；编排字段去 IAgentInfo（GetAgent）取。
 export interface IAiAssistantInfo {
   scene: string
+  agentId: string
   name: string
-  systemPrompt: string
-  llmModelId: string
-  modelParams: string
-  tools: string
-  mcpServerIds: string
-  openingMessage: string
   status: number
+  version: number
 }
 
 export interface IGetAiAssistantReq {
@@ -156,48 +153,60 @@ export interface IDeleteAgentCredentialReq {
   credentialId: string
 }
 
-export interface IAgentAppInfo {
-  appId: string
+// 渠道无关的 AI 编排定义（agents 表）。scene 归属在 IAiAssistantInfo，不在 Agent 上。
+export interface IAgentInfo {
+  agentId: string
   name: string
-  scene: string
+  description: string
+  ownerUserId: string
+  source: string       // official | custom
+  runtime: string      // builtin | workflow
   systemPrompt: string
   llmModelId: string
   modelParams: string
   tools: string
   mcpServerIds: string
-  knowledgeIds: string
+  knowledgeIds: string // 来自 agent_knowledge_bindings
   openingMessage: string
   openingQuestions: string
   variables: string
+  workflowConfig: string
   status: number
   sort: number
+  version: number
   createdBy: string
 }
 
-export interface IGetAgentAppListReq {
-  scene?: string
+export interface IGetAgentListReq {
+  scene?: string   // 传入时经 ai_assistant 解析出 agent_id 单查
+  source?: string
+  runtime?: string
   status?: number
   page: number
   pageSize: number
 }
 
-export interface IGetAgentAppListRes {
+export interface IGetAgentListRes {
   total: number
-  list: IAgentAppInfo[]
+  list: IAgentInfo[]
 }
 
-export interface IGetAgentAppReq {
-  appId?: string
+export interface IGetAgentReq {
+  agentId?: string
   scene?: string
 }
 
-export interface IGetAgentAppRes {
-  app: IAgentAppInfo
+export interface IGetAgentRes {
+  agent: IAgentInfo
 }
 
-export interface ICreateAgentAppReq {
+export interface ICreateAgentReq {
+  agentId?: string
   name: string
-  scene: string
+  scene?: string       // 传入时创建后绑定 scene↔agent_id
+  description?: string
+  source?: string
+  runtime?: string
   systemPrompt?: string
   llmModelId?: string
   modelParams?: string
@@ -207,20 +216,22 @@ export interface ICreateAgentAppReq {
   openingMessage?: string
   openingQuestions?: string
   variables?: string
+  workflowConfig?: string
   status?: number
   sort?: number
 }
 
-export interface ICreateAgentAppRes {
-  appId: string
+export interface ICreateAgentRes {
+  agentId: string
 }
 
-export interface IUpdateAgentAppReq extends ICreateAgentAppReq {
-  appId: string
+export interface IUpdateAgentReq extends ICreateAgentReq {
+  agentId: string
+  version?: number
 }
 
-export interface IDeleteAgentAppReq {
-  appId: string
+export interface IDeleteAgentReq {
+  agentId: string
 }
 
 export interface IAgentToolInfo {

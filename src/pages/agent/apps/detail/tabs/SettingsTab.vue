@@ -43,7 +43,8 @@
 
 <script lang="ts">
 import { ElMessage } from "element-plus"
-import { getAiAssistantApi, saveAiAssistantApi } from "@/api/agent"
+import { getAgentListApi, updateAgentApi, createAgentApi } from "@/api/agent"
+import type { IAgentInfo } from "@/types/api/agent"
 import FormCard from "../../components/FormCard.vue"
 
 const SCENE_LABELS: Record<string, string> = {
@@ -64,20 +65,18 @@ export default defineComponent({
     const loading = ref(false)
     const saving = ref(false)
     const form = reactive({ name: "", enabled: true })
+    let currentAgent: IAgentInfo | null = null
 
     const sceneLabel = computed(() => SCENE_LABELS[props.scene] || props.scene)
 
     const loadData = async () => {
       loading.value = true
       try {
-        const res = await getAiAssistantApi({ scene: props.scene })
-        const assistant = res.code === 0 ? res.result.assistant : null
-        if (assistant) {
-          form.name = assistant.name || sceneLabel.value
-          form.enabled = (assistant.status || 1) === 1
-        } else {
-          form.name = sceneLabel.value
-        }
+        // scene → agent_id 由后端经 ai_assistant 解析
+        const res = await getAgentListApi({ scene: props.scene, page: 1, pageSize: 20 })
+        currentAgent = res.code === 0 ? (res.result.list || [])[0] || null : null
+        form.name = currentAgent?.name || sceneLabel.value
+        form.enabled = (currentAgent?.status ?? 1) === 1
       } finally {
         loading.value = false
       }
@@ -91,14 +90,19 @@ export default defineComponent({
       }
       saving.value = true
       try {
-        const res = await saveAiAssistantApi({
-          scene: props.scene,
-          name,
-          status: form.enabled ? 1 : 2
-        })
+        const status = form.enabled ? 1 : 2
+        const res = currentAgent
+          ? await updateAgentApi({
+              agentId: currentAgent.agentId,
+              name,
+              status,
+              version: currentAgent.version
+            })
+          : await createAgentApi({ name, scene: props.scene, status })
         if (res.code !== 0) throw new Error(res.msg || "保存失败")
         ElMessage.success("设置已保存")
         emit("saved")
+        await loadData()
       } catch (err) {
         ElMessage.error(err instanceof Error && err.message ? err.message : "保存失败")
       } finally {

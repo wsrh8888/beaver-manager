@@ -151,16 +151,14 @@
 </template>
 
 <script lang="ts">
-import type { IAgentAppInfo, IAgentModelInfo } from "@/types/api/agent"
+import type { IAgentInfo, IAgentModelInfo } from "@/types/api/agent"
 import { Plus } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import {
-  createAgentAppApi,
-  getAgentAppListApi,
+  createAgentApi,
+  getAgentListApi,
   getAgentModelListApi,
-  getAiAssistantApi,
-  saveAiAssistantApi,
-  updateAgentAppApi
+  updateAgentApi
 } from "@/api/agent"
 import FormCard from "../../components/FormCard.vue"
 import IdTagsEditor from "../../components/IdTagsEditor.vue"
@@ -186,7 +184,7 @@ export default defineComponent({
     const loading = ref(false)
     const saving = ref(false)
     const modelOptions = ref<IAgentModelInfo[]>([])
-    const currentApp = ref<IAgentAppInfo | null>(null)
+    const currentApp = ref<IAgentInfo | null>(null)
 
     const form = reactive({
       systemPrompt: "",
@@ -214,8 +212,7 @@ export default defineComponent({
 
     /** 加载期间要抑制自动保存，否则刚读回来的值会被当成用户改动再写一遍 */
     const armed = ref(false)
-    const dirtyAssistant = ref(false)
-    const dirtyApp = ref(false)
+    const dirty = ref(false)
     let timer: ReturnType<typeof setTimeout> | undefined
 
     const effectiveModelName = computed(() => {
@@ -232,29 +229,33 @@ export default defineComponent({
     const loadData = async () => {
       loading.value = true
       try {
-        const [modelRes, assistantRes, appRes] = await Promise.all([
+        // scene → agent_id 解析在后端 ai_assistant 完成；编排字段唯一真相源就是 Agent。
+        const [modelRes, appRes] = await Promise.all([
           getAgentModelListApi({ status: 1, page: 1, pageSize: 200 }),
-          getAiAssistantApi({ scene: props.scene }),
-          getAgentAppListApi({ scene: props.scene, page: 1, pageSize: 20 })
+          getAgentListApi({ scene: props.scene, page: 1, pageSize: 20 })
         ])
         if (modelRes.code === 0) modelOptions.value = modelRes.result.list || []
 
-        const assistant = assistantRes.code === 0 ? assistantRes.result.assistant : null
-        const app =
-          appRes.code === 0 ? (appRes.result.list || []).find((a) => a.scene === props.scene) || null : null
+        const app = appRes.code === 0 ? (appRes.result.list || [])[0] || null : null
         currentApp.value = app
 
-        if (assistant) {
-          form.systemPrompt = assistant.systemPrompt || ""
-          form.openingMessage = assistant.openingMessage || ""
-          form.llmModelId = assistant.llmModelId || ""
-          const params = parseModelParams(assistant.modelParams)
+        if (app) {
+          form.systemPrompt = app.systemPrompt || ""
+          form.openingMessage = app.openingMessage || ""
+          form.llmModelId = app.llmModelId || ""
+          const params = parseModelParams(app.modelParams)
           temperature.value = params.temperature
           baseParams.topP = params.topP
           baseParams.maxOutputTokens = params.maxOutputTokens
+          openingQuestions.value = parseOpeningQuestions(app.openingQuestions || "")
+          vars.value = parseVars(app.variables || "")
+        } else {
+          form.systemPrompt = ""
+          form.openingMessage = ""
+          form.llmModelId = ""
+          openingQuestions.value = []
+          vars.value = []
         }
-        openingQuestions.value = parseOpeningQuestions(app?.openingQuestions || "")
-        vars.value = parseVars(app?.variables || "")
       } finally {
         loading.value = false
         // 等赋值触发的 watch 全部跑完再解锁，避免读回来的值被立即回写
@@ -271,96 +272,84 @@ export default defineComponent({
       return fallback
     }
 
-    /** 编排字段：只提交本分区负责的字段，工具/MCP 归工具分区管，不要顺手覆盖 */
-    const saveAssistant = async () => {
+    /** 编排字段唯一落在 Agent：人设 / 模型 / 参数 / 开场白 / 开场问题 / 变量一次性写入 */
+    const saveAgent = async () => {
       const modelParams = JSON.stringify({
         temperature: temperature.value ?? 0.7,
         topP: baseParams.topP,
         maxOutputTokens: baseParams.maxOutputTokens
       })
-      const res = await saveAiAssistantApi({
-        scene: props.scene,
-        systemPrompt: form.systemPrompt,
-        openingMessage: form.openingMessage,
-        llmModelId: form.llmModelId || undefined,
-        modelParams
-      })
-      if (res.code !== 0) throw new Error(res.msg || "编排保存失败")
-    }
-
-    /** 开场问题与变量存在 agent_app 上，首次改动时补建记录 */
-    const saveApp = async () => {
       const openingQuestionsStr = JSON.stringify(openingQuestions.value.map((q) => q.trim()).filter(Boolean))
       const variablesStr = JSON.stringify(vars.value)
       const app = currentApp.value
       const res = app
-        ? await updateAgentAppApi({
-            appId: app.appId,
+        ? await updateAgentApi({
+            agentId: app.agentId,
             name: app.name,
-            scene: app.scene,
-            systemPrompt: app.systemPrompt,
-            llmModelId: app.llmModelId,
-            modelParams: app.modelParams,
-            tools: app.tools,
-            mcpServerIds: app.mcpServerIds,
-            knowledgeIds: app.knowledgeIds,
-            openingMessage: app.openingMessage,
+            systemPrompt: form.systemPrompt,
+            llmModelId: form.llmModelId || undefined,
+            modelParams,
+            openingMessage: form.openingMessage,
             openingQuestions: openingQuestionsStr,
             variables: variablesStr,
             status: app.status,
-            sort: app.sort
+            sort: app.sort,
+            version: app.version
           })
-        : await createAgentAppApi({
+        : await createAgentApi({
             name: props.scene,
             scene: props.scene,
+            systemPrompt: form.systemPrompt,
+            llmModelId: form.llmModelId || undefined,
+            modelParams,
+            openingMessage: form.openingMessage,
             openingQuestions: openingQuestionsStr,
             variables: variablesStr,
             status: 1
           })
-      if (res.code !== 0) throw new Error(res.msg || "开场问题 / 变量保存失败")
+      if (res.code !== 0) throw new Error(res.msg || "编排保存失败")
 
-      // 新建后记住 appId，否则下次改动会再建一条重复记录
-      if (!app && res.result?.appId) {
+      // 新建后记住 agentId（后端同时完成 scene↔agent_id 绑定），否则下次会重复建记录
+      if (!app && res.result?.agentId) {
         currentApp.value = {
-          appId: res.result.appId,
+          agentId: res.result.agentId,
           name: props.scene,
-          scene: props.scene,
-          systemPrompt: "",
-          llmModelId: "",
-          modelParams: "",
+          description: "",
+          ownerUserId: "",
+          source: "custom",
+          runtime: "builtin",
+          systemPrompt: form.systemPrompt,
+          llmModelId: form.llmModelId,
+          modelParams,
           tools: "",
           mcpServerIds: "",
           knowledgeIds: "",
-          openingMessage: "",
+          openingMessage: form.openingMessage,
           openingQuestions: openingQuestionsStr,
           variables: variablesStr,
+          workflowConfig: "",
           status: 1,
           sort: 0,
+          version: 1,
           createdBy: ""
         }
       }
     }
 
     const flush = async () => {
-      if (!armed.value || loading.value) return
-      if (!dirtyAssistant.value && !dirtyApp.value) return
+      if (!armed.value || loading.value || !dirty.value) return
       // 上一次还没写完就再等一轮，避免两个请求交叉覆盖
       if (saving.value) {
         schedule()
         return
       }
-      const needAssistant = dirtyAssistant.value
-      const needApp = dirtyApp.value
-      dirtyAssistant.value = false
-      dirtyApp.value = false
+      dirty.value = false
       saving.value = true
       try {
-        if (needAssistant) await saveAssistant()
-        if (needApp) await saveApp()
+        await saveAgent()
       } catch (err) {
         // 失败保留脏标记，下次改动会重试；同时明确告诉用户没存上
-        if (needAssistant) dirtyAssistant.value = true
-        if (needApp) dirtyApp.value = true
+        dirty.value = true
         ElMessage.error(errorMessage(err, "保存失败"))
       } finally {
         saving.value = false
@@ -376,7 +365,7 @@ export default defineComponent({
     watch(
       () => [form.systemPrompt, form.openingMessage, form.llmModelId, temperature.value, baseParams.topP, baseParams.maxOutputTokens],
       () => {
-        dirtyAssistant.value = true
+        dirty.value = true
         schedule()
       }
     )
@@ -384,7 +373,7 @@ export default defineComponent({
     watch(
       [openingQuestions, vars],
       () => {
-        dirtyApp.value = true
+        dirty.value = true
         schedule()
       },
       { deep: true }
@@ -413,12 +402,9 @@ export default defineComponent({
     // 切换场景/离开分区时把没落库的改动补一次，避免「打完字就点走」丢内容
     onBeforeUnmount(() => {
       if (timer) clearTimeout(timer)
-      if (!armed.value || loading.value) return
-      if (!dirtyAssistant.value && !dirtyApp.value) return
-      dirtyAssistant.value = false
-      dirtyApp.value = false
-      void saveAssistant().catch(() => undefined)
-      void saveApp().catch(() => undefined)
+      if (!armed.value || loading.value || !dirty.value) return
+      dirty.value = false
+      void saveAgent().catch(() => undefined)
     })
 
     return {

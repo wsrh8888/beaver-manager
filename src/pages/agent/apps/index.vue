@@ -58,10 +58,10 @@
 </template>
 
 <script lang="ts">
-import type { IAgentAppInfo, IAgentModelInfo } from "@/types/api/agent"
+import type { IAgentInfo, IAgentModelInfo } from "@/types/api/agent"
 import { Right } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
-import { getAgentAppListApi, getAgentModelListApi, getAiAssistantApi } from "@/api/agent"
+import { getAgentListApi, getAgentModelListApi, getAiAssistantApi } from "@/api/agent"
 import { iconLetter, iconTint } from "./detail/tabs/cardVisual"
 import { parseIdList, parseModelParams, parseVars, styleFromParams } from "./detail/tabs/shared"
 
@@ -93,7 +93,7 @@ const STYLE_LABELS: Record<string, string> = {
 }
 
 export default defineComponent({
-  name: "AgentAppsListPage",
+  name: "AgentsListPage",
   components: { Right },
   setup() {
     const router = useRouter()
@@ -112,29 +112,30 @@ export default defineComponent({
         const [modelRes, assistantRes, appRes] = await Promise.all([
           getAgentModelListApi({ status: 1, page: 1, pageSize: 200 }),
           Promise.all(SCENES.map((s) => getAiAssistantApi({ scene: s }))),
-          getAgentAppListApi({ page: 1, pageSize: 100 })
+          getAgentListApi({ page: 1, pageSize: 100 })
         ])
         if (modelRes.code === 0) modelOptions.value = modelRes.result.list || []
 
-        const appMap = new Map<string, IAgentAppInfo>()
+        const appMap = new Map<string, IAgentInfo>()
         if (appRes.code === 0) {
-          for (const app of appRes.result.list || []) appMap.set(app.scene, app)
+          for (const app of appRes.result.list || []) appMap.set(app.agentId, app)
         }
 
+        // ai_assistant 只提供 scene↔agent_id；编排字段一律从对应的 Agent 读
         cards.value = SCENES.map((scene) => {
           const assistant = assistantRes.find((r) => r.code === 0 && r.result.assistant?.scene === scene)?.result.assistant
-          const app = appMap.get(scene)
-          const style = styleFromParams(parseModelParams(assistant?.modelParams || app?.modelParams || ""))
+          const app = assistant?.agentId ? appMap.get(assistant.agentId) : undefined
+          const style = styleFromParams(parseModelParams(app?.modelParams || ""))
           return {
             scene,
-            name: assistant?.name || SCENE_LABELS[scene],
-            systemPrompt: assistant?.systemPrompt || app?.systemPrompt || "",
-            status: assistant?.status || app?.status || 1,
-            modelName: modelNameOf(assistant?.llmModelId || app?.llmModelId || ""),
+            name: app?.name || assistant?.name || SCENE_LABELS[scene],
+            systemPrompt: app?.systemPrompt || "",
+            status: app?.status ?? assistant?.status ?? 1,
+            modelName: modelNameOf(app?.llmModelId || ""),
             generationStyle: STYLE_LABELS[style] || "",
             knowledgeCount: parseIdList(app?.knowledgeIds || "").length,
-            toolCount: parseIdList(assistant?.tools || app?.tools || "").length,
-            mcpCount: parseIdList(assistant?.mcpServerIds || app?.mcpServerIds || "").length,
+            toolCount: parseIdList(app?.tools || "").length,
+            mcpCount: parseIdList(app?.mcpServerIds || "").length,
             varCount: parseVars(app?.variables || "").length
           }
         })

@@ -62,8 +62,8 @@ export interface ICreateSystemDigitalReq {
 
 export interface ICreateSystemDigitalRes {
   digitalId: string
-  appKey?: string
-  appSecret?: string
+  digitalKey?: string
+  digitalSecret?: string
 }
 
 export interface IUpdateDigitalReq {

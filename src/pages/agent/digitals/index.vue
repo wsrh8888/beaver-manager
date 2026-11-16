@@ -278,9 +278,9 @@ export default defineComponent({
       const created = !isEdit.value ? res.result : undefined
       ElMessage.success("已保存")
       fetchList()
-      if (created && created.appSecret) {
+      if (created && created.digitalSecret) {
         ElMessageBox.alert(
-          `AppKey: ${created.appKey}  AppSecret: ${created.appSecret}`,
+          `DigitalKey: ${created.digitalKey}  DigitalSecret: ${created.digitalSecret}`,
           "外接凭据仅显示一次"
         ).then(() => undefined, () => undefined)
       }

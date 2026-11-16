@@ -59,7 +59,7 @@ const TABS = [
 ]
 
 export default defineComponent({
-  name: "AgentAppDetail",
+  name: "AgentDetail",
   components: { ArrowLeft, TabNav, OrchestrationTab, ToolsTab, KnowledgeTab, SettingsTab },
   setup() {
     const route = useRoute()

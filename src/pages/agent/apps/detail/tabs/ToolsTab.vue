@@ -267,16 +267,16 @@
 </template>
 
 <script lang="ts">
-import type { IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
+import type { IAgentInfo, IAgentMcpServerInfo, IAgentToolInfo } from "@/types/api/agent"
 import { Connection, Plus, Search } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import {
   createAgentMcpServerApi,
   deleteAgentMcpServerApi,
+  getAgentListApi,
   getAgentMcpServerListApi,
   getAgentToolListApi,
-  getAiAssistantApi,
-  saveAiAssistantApi
+  updateAgentApi
 } from "@/api/agent"
 import { iconLetter, iconTint } from "./cardVisual"
 import { parseIdList } from "./shared"
@@ -297,6 +297,7 @@ export default defineComponent({
 
     const enabledIds = ref<string[]>([])
     const enabledMcpIds = ref<string[]>([])
+    const currentAgent = ref<IAgentInfo | null>(null)
 
     const plazaVisible = ref(false)
     const plazaSearch = ref("")
@@ -358,21 +359,30 @@ export default defineComponent({
       if (res.code === 0) mcpList.value = res.result.list || []
     }
 
+    // 工具 / MCP 绑定属于 Agent 编排，唯一真相源在 agents.tool_ids / mcp_server_ids
     async function loadDetail() {
       detailLoading.value = true
-      const res = await getAiAssistantApi({ scene: props.scene })
+      const res = await getAgentListApi({ scene: props.scene, page: 1, pageSize: 20 })
       detailLoading.value = false
-      const assistant = res.code === 0 ? res.result.assistant : null
-      enabledIds.value = parseIdList(assistant?.tools || "")
-      enabledMcpIds.value = parseIdList(assistant?.mcpServerIds || "")
+      const agent = res.code === 0 ? (res.result.list || [])[0] : null
+      enabledIds.value = parseIdList(agent?.tools || "")
+      enabledMcpIds.value = parseIdList(agent?.mcpServerIds || "")
+      currentAgent.value = agent || null
     }
 
     async function persist() {
+      const agent = currentAgent.value
+      if (!agent) {
+        ElMessage.error("当前场景还没有绑定 Agent，请先在编排页保存一次")
+        return false
+      }
       persisting.value = true
-      const res = await saveAiAssistantApi({
-        scene: props.scene,
+      const res = await updateAgentApi({
+        agentId: agent.agentId,
+        name: agent.name,
         tools: JSON.stringify(enabledIds.value),
-        mcpServerIds: JSON.stringify(enabledMcpIds.value)
+        mcpServerIds: JSON.stringify(enabledMcpIds.value),
+        version: agent.version
       })
       persisting.value = false
       if (res.code !== 0) {

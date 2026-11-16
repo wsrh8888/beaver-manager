@@ -20,19 +20,19 @@
  */
 
 import type {
-  ICreateAgentAppReq,
-  ICreateAgentAppRes,
+  ICreateAgentReq,
+  ICreateAgentRes,
   ICreateAgentMcpServerReq,
   ICreateAgentMcpServerRes,
   ICreateAgentToolReq,
   ICreateAgentToolRes,
-  IDeleteAgentAppReq,
+  IDeleteAgentReq,
   IDeleteAgentMcpServerReq,
   IDeleteAgentToolReq,
-  IGetAgentAppListReq,
-  IGetAgentAppListRes,
-  IGetAgentAppReq,
-  IGetAgentAppRes,
+  IGetAgentListReq,
+  IGetAgentListRes,
+  IGetAgentReq,
+  IGetAgentRes,
   IGetAgentModelListReq,
   IGetAgentModelListRes,
   ICreateAgentModelReq,
@@ -56,7 +56,7 @@ import type {
   IGetAgentToolListRes,
   IGetAgentToolReq,
   IGetAgentToolRes,
-  IUpdateAgentAppReq,
+  IUpdateAgentReq,
   IUpdateAgentMcpServerReq,
   IUpdateAgentToolReq,
   IParseAgentToolFileReq,
@@ -81,42 +81,42 @@ export function getAiAssistantApi(params: IGetAiAssistantReq) {
   })
 }
 
-export function getAgentAppListApi(params: IGetAgentAppListReq) {
-  return ajax<IGetAgentAppListRes>({
+export function getAgentListApi(params: IGetAgentListReq) {
+  return ajax<IGetAgentListRes>({
     method: "GET",
-    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/list`,
     params
   })
 }
 
-export function getAgentAppApi(params: IGetAgentAppReq) {
-  return ajax<IGetAgentAppRes>({
+export function getAgentApi(params: IGetAgentReq) {
+  return ajax<IGetAgentRes>({
     method: "GET",
-    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_detail`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/detail`,
     params
   })
 }
 
-export function createAgentAppApi(data: ICreateAgentAppReq) {
-  return ajax<ICreateAgentAppRes>({
+export function createAgentApi(data: ICreateAgentReq) {
+  return ajax<ICreateAgentRes>({
     method: "POST",
-    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/create`,
     data
   })
 }
 
-export function updateAgentAppApi(data: IUpdateAgentAppReq) {
+export function updateAgentApi(data: IUpdateAgentReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/update`,
     data
   })
 }
 
-export function deleteAgentAppApi(data: IDeleteAgentAppReq) {
+export function deleteAgentApi(data: IDeleteAgentReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/delete`,
     data
   })
 }

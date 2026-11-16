@@ -37,7 +37,7 @@ import { ajax } from "@/utils/request"
 export function getOpenOAuthListApi(params: IGetOpenOAuthListReq) {
   return ajax<IGetOpenOAuthListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/open/v1/oauth_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/open/v1/oauth_list`,
     params
   })
 }
@@ -45,7 +45,7 @@ export function getOpenOAuthListApi(params: IGetOpenOAuthListReq) {
 export function updateOpenOAuthStatusApi(data: IUpdateOpenOAuthStatusReq) {
   return ajax<IUpdateOpenOAuthStatusRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/oauth_update_status`,
+    url: `${config.baseAPI}/beaver/admin/backend/open/v1/oauth_update_status`,
     data
   })
 }
@@ -55,7 +55,7 @@ export function updateOpenOAuthStatusApi(data: IUpdateOpenOAuthStatusReq) {
 export function getOpenBotListApi(params: IGetOpenBotListReq) {
   return ajax<IGetOpenBotListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/open/v1/bot_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/open/v1/bot_list`,
     params
   })
 }
@@ -63,7 +63,7 @@ export function getOpenBotListApi(params: IGetOpenBotListReq) {
 export function updateOpenBotStatusApi(data: IUpdateOpenBotStatusReq) {
   return ajax<IUpdateOpenBotStatusRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/open/v1/bot_update_status`,
+    url: `${config.baseAPI}/beaver/admin/backend/open/v1/bot_update_status`,
     data
   })
 }

@@ -68,7 +68,7 @@ import { ajax } from "@/utils/request"
 export function saveAiAssistantApi(data: ISaveAiAssistantReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/assistant_save`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/assistant_save`,
     data
   })
 }
@@ -76,7 +76,7 @@ export function saveAiAssistantApi(data: ISaveAiAssistantReq) {
 export function getAiAssistantApi(params: IGetAiAssistantReq) {
   return ajax<{ assistant: IAiAssistantInfo }>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/assistant_detail`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/assistant_detail`,
     params
   })
 }
@@ -84,7 +84,7 @@ export function getAiAssistantApi(params: IGetAiAssistantReq) {
 export function getAgentAppListApi(params: IGetAgentAppListReq) {
   return ajax<IGetAgentAppListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/app_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_list`,
     params
   })
 }
@@ -92,7 +92,7 @@ export function getAgentAppListApi(params: IGetAgentAppListReq) {
 export function getAgentAppApi(params: IGetAgentAppReq) {
   return ajax<IGetAgentAppRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/app_detail`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_detail`,
     params
   })
 }
@@ -100,7 +100,7 @@ export function getAgentAppApi(params: IGetAgentAppReq) {
 export function createAgentAppApi(data: ICreateAgentAppReq) {
   return ajax<ICreateAgentAppRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/app_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_create`,
     data
   })
 }
@@ -108,7 +108,7 @@ export function createAgentAppApi(data: ICreateAgentAppReq) {
 export function updateAgentAppApi(data: IUpdateAgentAppReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/app_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_update`,
     data
   })
 }
@@ -116,7 +116,7 @@ export function updateAgentAppApi(data: IUpdateAgentAppReq) {
 export function deleteAgentAppApi(data: IDeleteAgentAppReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/admin/backend/agent/v1/app_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/app_delete`,
     data
   })
 }
@@ -124,7 +124,7 @@ export function deleteAgentAppApi(data: IDeleteAgentAppReq) {
 export function getAgentToolListApi(params: IGetAgentToolListReq) {
   return ajax<IGetAgentToolListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_list`,
     params
   })
 }
@@ -132,7 +132,7 @@ export function getAgentToolListApi(params: IGetAgentToolListReq) {
 export function getAgentToolApi(params: IGetAgentToolReq) {
   return ajax<IGetAgentToolRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_detail`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_detail`,
     params
   })
 }
@@ -140,7 +140,7 @@ export function getAgentToolApi(params: IGetAgentToolReq) {
 export function createAgentToolApi(data: ICreateAgentToolReq) {
   return ajax<ICreateAgentToolRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_create`,
     data
   })
 }
@@ -149,7 +149,7 @@ export function createAgentToolApi(data: ICreateAgentToolReq) {
 export function parseAgentToolFileApi(data: IParseAgentToolFileReq) {
   return ajax<IParseAgentToolFileRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_parse`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_parse`,
     data
   })
 }
@@ -157,7 +157,7 @@ export function parseAgentToolFileApi(data: IParseAgentToolFileReq) {
 export function updateAgentToolApi(data: IUpdateAgentToolReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_update`,
     data
   })
 }
@@ -165,7 +165,7 @@ export function updateAgentToolApi(data: IUpdateAgentToolReq) {
 export function deleteAgentToolApi(data: IDeleteAgentToolReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/admin/backend/agent/v1/tool_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/tool_delete`,
     data
   })
 }
@@ -173,7 +173,7 @@ export function deleteAgentToolApi(data: IDeleteAgentToolReq) {
 export function getAgentMcpServerListApi(params: IGetAgentMcpServerListReq) {
   return ajax<IGetAgentMcpServerListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/mcp_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/mcp_list`,
     params
   })
 }
@@ -181,7 +181,7 @@ export function getAgentMcpServerListApi(params: IGetAgentMcpServerListReq) {
 export function getAgentMcpServerApi(params: IGetAgentMcpServerReq) {
   return ajax<IGetAgentMcpServerRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/mcp_detail`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/mcp_detail`,
     params
   })
 }
@@ -189,7 +189,7 @@ export function getAgentMcpServerApi(params: IGetAgentMcpServerReq) {
 export function createAgentMcpServerApi(data: ICreateAgentMcpServerReq) {
   return ajax<ICreateAgentMcpServerRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/mcp_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/mcp_create`,
     data
   })
 }
@@ -197,7 +197,7 @@ export function createAgentMcpServerApi(data: ICreateAgentMcpServerReq) {
 export function updateAgentMcpServerApi(data: IUpdateAgentMcpServerReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/mcp_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/mcp_update`,
     data
   })
 }
@@ -205,7 +205,7 @@ export function updateAgentMcpServerApi(data: IUpdateAgentMcpServerReq) {
 export function getAgentModelListApi(params: IGetAgentModelListReq) {
   return ajax<IGetAgentModelListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/model_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/model_list`,
     params
   })
 }
@@ -213,7 +213,7 @@ export function getAgentModelListApi(params: IGetAgentModelListReq) {
 export function createAgentModelApi(data: ICreateAgentModelReq) {
   return ajax<ICreateAgentModelRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/model_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/model_create`,
     data
   })
 }
@@ -221,7 +221,7 @@ export function createAgentModelApi(data: ICreateAgentModelReq) {
 export function updateAgentModelApi(data: IUpdateAgentModelReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/model_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/model_update`,
     data
   })
 }
@@ -229,7 +229,7 @@ export function updateAgentModelApi(data: IUpdateAgentModelReq) {
 export function deleteAgentModelApi(data: IDeleteAgentModelReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/admin/backend/agent/v1/model_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/model_delete`,
     data
   })
 }
@@ -237,7 +237,7 @@ export function deleteAgentModelApi(data: IDeleteAgentModelReq) {
 export function deleteAgentMcpServerApi(data: IDeleteAgentMcpServerReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/admin/backend/agent/v1/mcp_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/mcp_delete`,
     data
   })
 }
@@ -246,7 +246,7 @@ export function deleteAgentMcpServerApi(data: IDeleteAgentMcpServerReq) {
 export function getAgentCredentialListApi(params: IGetAgentCredentialListReq) {
   return ajax<IGetAgentCredentialListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/agent/v1/credential_list`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/credential_list`,
     params
   })
 }
@@ -254,7 +254,7 @@ export function getAgentCredentialListApi(params: IGetAgentCredentialListReq) {
 export function createAgentCredentialApi(data: ICreateAgentCredentialReq) {
   return ajax<ICreateAgentCredentialRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/agent/v1/credential_create`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/credential_create`,
     data
   })
 }
@@ -262,7 +262,7 @@ export function createAgentCredentialApi(data: ICreateAgentCredentialReq) {
 export function updateAgentCredentialApi(data: IUpdateAgentCredentialReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/agent/v1/credential_update`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/credential_update`,
     data
   })
 }
@@ -270,7 +270,7 @@ export function updateAgentCredentialApi(data: IUpdateAgentCredentialReq) {
 export function deleteAgentCredentialApi(data: IDeleteAgentCredentialReq) {
   return ajax<void>({
     method: "DELETE",
-    url: `${config.baseAPI}/admin/backend/agent/v1/credential_delete`,
+    url: `${config.baseAPI}/beaver/admin/backend/agent/v1/credential_delete`,
     data
   })
 }

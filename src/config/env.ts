@@ -26,11 +26,11 @@ export const config = {
   // 当前环境
   env: import.meta.env.VITE_APP_ENV,
 
-  // API 基础地址
+  /**
+   * 网关 origin：只含协议 + 域名 + 端口，不含任何路径。
+   * 完整路径写在每个接口的 url 里：/beaver/admin/backend/{group}/v1/{action}
+   */
   baseAPI: import.meta.env.VITE_API_BASE,
-
-  apiApi: import.meta.env.VITE_API_API,
-
 }
 
 // 打印当前环境信息

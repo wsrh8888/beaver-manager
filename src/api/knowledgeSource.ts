@@ -48,7 +48,7 @@ import type {
   IUploadKnowledgeSourceDocRes
 } from "@/types/api/knowledgeSource"
 
-const sourceBase = `${config.baseAPI}/admin/backend/knowledge/v1`
+const sourceBase = `${config.baseAPI}/beaver/admin/backend/knowledge/v1`
 
 export function listKnowledgeSourceApi(params: IListKnowledgeSourceReq) {
   return ajax<IListKnowledgeSourceRes>({

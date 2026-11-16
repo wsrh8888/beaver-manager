@@ -32,7 +32,7 @@ import { ajax } from "@/utils/request"
 export function getDigitalListApi(params: IGetDigitalListReq) {
   return ajax<IGetDigitalListRes>({
     method: "GET",
-    url: `${config.baseAPI}/admin/backend/digital/v1/list`,
+    url: `${config.baseAPI}/beaver/admin/backend/digital/v1/list`,
     params
   })
 }
@@ -40,7 +40,7 @@ export function getDigitalListApi(params: IGetDigitalListReq) {
 export function createSystemDigitalApi(data: ICreateSystemDigitalReq) {
   return ajax<ICreateSystemDigitalRes>({
     method: "POST",
-    url: `${config.baseAPI}/admin/backend/digital/v1/create`,
+    url: `${config.baseAPI}/beaver/admin/backend/digital/v1/create`,
     data
   })
 }
@@ -48,7 +48,7 @@ export function createSystemDigitalApi(data: ICreateSystemDigitalReq) {
 export function updateDigitalApi(data: IUpdateDigitalReq) {
   return ajax<void>({
     method: "PUT",
-    url: `${config.baseAPI}/admin/backend/digital/v1/update`,
+    url: `${config.baseAPI}/beaver/admin/backend/digital/v1/update`,
     data
   })
 }

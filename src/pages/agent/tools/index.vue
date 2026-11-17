@@ -457,7 +457,10 @@ export default defineComponent({
 
 <style scoped lang="less">
 .agent-skills {
-  padding: 4px 0;
+  padding: 20px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
 
   &__header {
     display: flex;

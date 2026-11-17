@@ -158,6 +158,11 @@ export default defineComponent({
 
 <style lang="less" scoped>
 .agent-apps {
+  padding: 20px;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 12px;
+
   &__header {
     margin-bottom: 16px;
   }
